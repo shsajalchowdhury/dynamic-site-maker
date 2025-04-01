@@ -1,0 +1,136 @@
+# Dynamic Site Maker - WordPress Plugin Development Guide
+
+## Plugin Information
+- **Plugin Name:** Dynamic Site Maker
+- **Author:** SH Sajal Chowdhury
+- **Author URI:** [easywptools.com](https://easywptools.com)
+- **Email:** bdsajalinfo@gmail.com
+
+---
+
+## Introduction
+This guide provides step-by-step instructions for developing a WordPress plugin that dynamically generates landing pages using submitted form data and a **pre-designed Elementor template**.
+
+---
+
+## 1. How the Plugin Works
+
+1. **User submits a form** with the following fields:
+   - Name
+   - Logo Upload
+   - Affiliate Link
+2. The plugin **validates and processes** the form data.
+3. The plugin **creates a new WordPress page** using a **predefined Elementor template** (without selection options).
+4. The plugin **stores the form data** in custom fields (meta fields) for the generated page.
+5. Elementor **automatically injects** the data into the template using dynamic fields.
+6. The plugin **redirects the user** to the newly created landing page.
+7. **Spam Protection:** Users can only submit the form **once** per session/IP to prevent spam.
+
+---
+
+## 2. Optimized Plugin File Structure
+
+```
+/dynamic-site-maker/
+│── dynamic-site-maker.php  # Main plugin file
+│── /includes/
+│   ├── class-dynamic-site-maker-form-handler.php  # Handles form submissions
+│   ├── class-dynamic-site-maker-landing-page.php  # Generates landing pages dynamically
+│   ├── class-dynamic-site-maker-admin-settings.php  # Admin settings (No template selection)
+│   ├── class-dynamic-site-maker-elementor-integration.php  # Elementor API integration
+│   ├── class-dynamic-site-maker-spam-protection.php  # Prevents multiple submissions per user
+│── /templates/
+│   ├── elementor-template.json  # Elementor template for the landing page
+│── /assets/
+│   ├── css/style.css  # Custom styles
+│   ├── js/dynamic-site-maker-form-handler.js  # AJAX form submission
+
+```
+
+---
+
+## 3. Tech Stack & Standards
+- **Backend:** PHP (Object-Oriented Programming)
+- **Frontend:** HTML, CSS, JavaScript (AJAX)
+- **Database:** WordPress Meta Fields & Options API
+- **Security:** Follows WordPress Security Best Practices
+- **Optimization:** Minified assets, caching strategies, image optimization
+- **Coding Standards:** WordPress Coding Standards (PHPCS Compliant)
+- **Prefixing:** Uses a **4-character prefix** (`dsmk_`) in all functions, classes, and database keys to avoid conflicts
+- **Documentation:** Well-commented code with inline docblocks
+
+---
+
+## 4. Key Functionalities & Workflow
+
+### **4.1 Form Submission & Data Handling**
+- A **shortcode** `[dsmk_form]` displays the submission form.
+- Uses **AJAX** for submission to improve user experience.
+- Validates input using `wp_nonce_field()` for security.
+- Stores uploaded **logos** in the WordPress Media Library.
+- **Spam Prevention:**
+  - Uses cookies or session tracking to **restrict form submission to once per user**.
+  - Optionally, logs IP addresses to detect repeated submissions.
+
+### **4.2 Creating a Dynamic Landing Page**
+- The plugin **creates a new WordPress page** using `wp_insert_post()`.
+- It **automatically assigns the predefined Elementor template** (without selection options).
+- **Stores form data as custom fields** (Meta Fields).
+
+### **4.3 Elementor Integration**
+- Elementor **pulls dynamic content** from custom fields (`{acf:name}`, `{acf:logo}`, `{acf:affiliate_link}`).
+- Elementor **replaces placeholders** with the user-submitted data.
+- The landing page **instantly reflects the changes**.
+
+### **4.4 Redirecting User**
+- Once the page is created, the user is **redirected to the new page** automatically.
+- Uses `wp_redirect()` to send the user to the new landing page.
+
+---
+
+## 5. Elementor Template Setup
+
+### **Steps to Create the Elementor Template:**
+1. **Design a landing page** in Elementor.
+2. Add **Dynamic Fields** for Name, Logo, and Affiliate Link.
+3. Save and **export the template as JSON**.
+4. Place the exported file in the `/templates/` folder.
+5. The plugin **imports the template** programmatically during form submission.
+
+---
+
+## 6. Security & Optimization
+
+### **Security Measures:**
+✅ **Nonces** to prevent CSRF attacks.  
+✅ **Sanitize and validate** all input fields.  
+✅ Restrict file uploads to `jpg, png, svg`.  
+✅ Limit file size to `5MB`.  
+✅ Enforce **escaping** (`esc_html()`, `esc_url()`, etc.).
+✅ Use **prepared SQL statements** to prevent SQL injection.
+✅ Remove unnecessary user capabilities.
+✅ **Spam protection:** Prevents multiple form submissions per user.
+
+---
+
+## 7. Testing & Deployment
+
+### **Testing Steps:**
+1. Install and activate the plugin.
+2. Place `[dsmk_form]` on a test page.
+3. Submit the form and verify:
+   - A **new Elementor page is created**.
+   - Submitted **Name, Logo, and Affiliate Link appear** correctly.
+   - The user is **redirected to the new page**.
+   - **Spam prevention works** (users cannot submit twice).
+
+### **Deployment Checklist:**
+✅ Ensure **error logging** is disabled in production.  
+✅ Minify **CSS and JavaScript** files.  
+✅ Check **plugin compatibility** with the latest WordPress version.  
+✅ Validate code with **PHPCS (WordPress Coding Standards)**.  
+✅ Submit to **WordPress Plugin Repository** if required.  
+
+---
+
+

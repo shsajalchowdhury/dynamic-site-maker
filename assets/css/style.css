@@ -1,0 +1,772 @@
+/**
+ * Dynamic Site Maker Styles
+ */
+
+/* Form Container */
+.dsmk-form-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+}
+
+.dsmk-form-wrapper {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 5px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    position: relative;
+}
+
+/* Form Header */
+.dsmk-form-header {
+    text-align: center;
+    padding: 40px 30px 30px;
+    background: linear-gradient(135deg, #2196f3, #1565c0);
+    color: #fff;
+}
+
+.dsmk-form-logo {
+    margin-bottom: 20px;
+    display: inline-block;
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    padding: 15px;
+}
+
+.dsmk-form-header h2 {
+    font-size: 28px;
+    margin: 0 0 10px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.dsmk-form-header p {
+    font-size: 16px;
+    margin: 0;
+    opacity: 0.9;
+}
+
+/* Progress Steps */
+.dsmk-form-progress {
+    padding: 25px 30px;
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #eaeaea;
+}
+
+.dsmk-progress-steps {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.dsmk-progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 1;
+    position: relative;
+    flex: 1;
+}
+
+.dsmk-step-number {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: #e0e0e0;
+    color: #757575;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+    font-size: 16px;
+    position: relative;
+    z-index: 2;
+}
+
+.dsmk-step-label {
+    font-size: 14px;
+    color: #757575;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.dsmk-progress-step.active .dsmk-step-number {
+    background-color: #2196f3;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+}
+
+.dsmk-progress-step.active .dsmk-step-label {
+    color: #2196f3;
+    font-weight: 600;
+}
+
+.dsmk-progress-step.completed .dsmk-step-number {
+    background-color: #4caf50;
+    color: #fff;
+}
+
+.dsmk-progress-connector {
+    height: 3px;
+    background-color: #e0e0e0;
+    flex-grow: 1;
+    margin: 0 10px;
+    position: relative;
+    top: -22px;
+    z-index: 0;
+}
+
+.dsmk-progress-connector.active {
+    background-color: #2196f3;
+}
+
+/* Form Messages */
+.dsmk-form__messages {
+    padding: 0 30px;
+    margin-top: 20px;
+}
+
+/* Form Steps */
+.dsmk-form {
+    padding: 30px;
+}
+
+.dsmk-form-step {
+    display: none;
+    animation: fadeEffect 0.5s;
+}
+
+.dsmk-form-step.active {
+    display: block;
+}
+
+@keyframes fadeEffect {
+    from {opacity: 0; transform: translateY(10px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+
+.dsmk-form-step h3 {
+    font-size: 22px;
+    margin: 0 0 25px;
+    color: #333;
+    font-weight: 600;
+}
+
+/* Form Fields */
+.dsmk-form-field {
+    margin-bottom: 25px;
+}
+
+.dsmk-form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    color: #333;
+}
+
+.dsmk-form-required {
+    color: #f44336;
+    margin-left: 2px;
+}
+
+.dsmk-input-wrapper {
+    position: relative;
+}
+
+.dsmk-input-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #757575;
+    display: flex;
+    align-items: center;
+}
+
+.dsmk-form-input {
+    width: 100%;
+    padding: 12px 15px 12px 40px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+.dsmk-form-input:focus {
+    border-color: #2196f3;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2);
+}
+
+.dsmk-form-description {
+    margin-top: 6px;
+    font-size: 14px;
+    color: #666;
+}
+
+/* File Upload */
+.dsmk-file-upload {
+    margin-bottom: 10px;
+}
+
+.dsmk-file-upload-area {
+    position: relative;
+    border: 2px dashed #ddd;
+    border-radius: 6px;
+    padding: 20px;
+    text-align: center;
+    background-color: #f9f9f9;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.dsmk-file-upload-area:hover,
+.dsmk-file-upload-area.dragover {
+    border-color: #2196f3;
+    background-color: #f0f7fd;
+}
+
+.dsmk-file-input {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.dsmk-file-upload-content {
+    padding: 30px 20px;
+}
+
+.dsmk-file-upload-icon {
+    margin-bottom: 15px;
+    color: #2196f3;
+}
+
+.dsmk-drag-text {
+    font-size: 18px;
+    font-weight: 500;
+    color: #333;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.dsmk-or-text {
+    display: block;
+    margin: 15px 0;
+    color: #666;
+    font-size: 14px;
+    position: relative;
+}
+
+.dsmk-or-text:before,
+.dsmk-or-text:after {
+    content: '';
+    display: block;
+    width: 80px;
+    height: 1px;
+    background: #ddd;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.dsmk-or-text:before {
+    left: calc(50% - 100px);
+}
+
+.dsmk-or-text:after {
+    right: calc(50% - 100px);
+}
+
+.dsmk-browse-button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #2196f3;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.dsmk-browse-button:hover {
+    background-color: #1976d2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dsmk-file-preview {
+    display: none;
+    padding: 15px;
+    text-align: left;
+    background-color: #fff;
+    border-radius: 6px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-top: 15px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dsmk-file-preview.active {
+    display: flex;
+}
+
+.dsmk-preview-image {
+    width: 60px;
+    height: 60px;
+    border-radius: 4px;
+    overflow: hidden;
+    flex-shrink: 0;
+    margin-right: 15px;
+    background-color: #f1f1f1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-size: 24px;
+}
+
+.dsmk-preview-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.dsmk-file-info {
+    flex-grow: 1;
+}
+
+.dsmk-file-name {
+    font-weight: 500;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.dsmk-file-size {
+    font-size: 13px;
+    color: #666;
+}
+
+.dsmk-remove-file {
+    background: none;
+    border: none;
+    color: #f44336;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 10px;
+    transition: all 0.2s ease;
+}
+
+.dsmk-remove-file:hover {
+    background-color: rgba(244, 67, 54, 0.1);
+}
+
+/* Form Actions */
+.dsmk-form-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+}
+
+/* Buttons */
+.dsmk-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+}
+
+.dsmk-button-prev {
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+.dsmk-button-prev:hover {
+    background-color: #e0e0e0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dsmk-button-next,
+.dsmk-button-submit {
+    background-color: #2196f3;
+    color: white;
+}
+
+.dsmk-button-next:hover,
+.dsmk-button-submit:hover {
+    background-color: #1976d2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+}
+
+.dsmk-button-icon-left {
+    margin-right: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.dsmk-button-icon-right {
+    margin-left: 8px;
+    display: flex;
+    align-items: center;
+}
+
+/* Loading Animation */
+.dsmk-form-loading {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.9);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    z-index: 100;
+}
+
+.dsmk-loading-spinner {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.dsmk-spinner-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    border-top-color: #2196f3;
+    animation: spin 1s linear infinite;
+}
+
+.dsmk-spinner-inner:before,
+.dsmk-spinner-inner:after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    border: 3px solid transparent;
+}
+
+.dsmk-spinner-inner:before {
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    bottom: 5px;
+    border-top-color: #03a9f4;
+    animation: spin 2s linear infinite;
+}
+
+.dsmk-spinner-inner:after {
+    top: 15px;
+    left: 15px;
+    right: 15px;
+    bottom: 15px;
+    border-top-color: #00bcd4;
+    animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+    0% {transform: rotate(0deg);}
+    100% {transform: rotate(360deg);}
+}
+
+.dsmk-form-loading p {
+    font-size: 18px;
+    color: #333;
+    font-weight: 500;
+}
+
+/* Success Message */
+.dsmk-form-success {
+    display: none;
+    text-align: center;
+    padding: 60px 30px;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+
+.dsmk-success-icon {
+    color: #4caf50;
+    margin-bottom: 20px;
+}
+
+.dsmk-form-success h3 {
+    font-size: 28px;
+    margin: 0 0 10px;
+    color: #333;
+    font-weight: 600;
+}
+
+.dsmk-form-success p {
+    font-size: 16px;
+    margin: 0 0 20px;
+    color: #666;
+}
+
+.dsmk-redirect-progress {
+    max-width: 300px;
+    height: 6px;
+    background-color: #f1f1f1;
+    border-radius: 3px;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+.dsmk-redirect-bar {
+    height: 100%;
+    width: 0;
+    background-color: #4caf50;
+    transition: width 0.1s linear;
+}
+
+/* Notices */
+.dsmk-notice {
+    display: flex;
+    padding: 20px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dsmk-notice-icon {
+    flex-shrink: 0;
+    margin-right: 15px;
+    display: flex;
+    align-items: flex-start;
+}
+
+.dsmk-notice-content {
+    flex-grow: 1;
+}
+
+.dsmk-notice-content h3 {
+    margin: 0 0 5px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.dsmk-notice-content p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.dsmk-notice--error {
+    background-color: #fdeaea;
+    border-left: 4px solid #f44336;
+}
+
+.dsmk-notice--error .dsmk-notice-icon {
+    color: #f44336;
+}
+
+.dsmk-notice--success {
+    background-color: #e8f5e9;
+    border-left: 4px solid #4caf50;
+}
+
+.dsmk-notice--success .dsmk-notice-icon {
+    color: #4caf50;
+}
+
+.dsmk-notice--warning {
+    background-color: #fff8e1;
+    border-left: 4px solid #ff9800;
+}
+
+.dsmk-notice--warning .dsmk-notice-icon {
+    color: #ff9800;
+}
+
+.dsmk-notice--info {
+    background-color: #e1f5fe;
+    border-left: 4px solid #03a9f4;
+}
+
+.dsmk-notice--info .dsmk-notice-icon {
+    color: #03a9f4;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dsmk-form-container {
+        padding: 0 15px;
+    }
+    
+    .dsmk-form-header {
+        padding: 30px 20px 20px;
+    }
+    
+    .dsmk-form-header h2 {
+        font-size: 24px;
+    }
+    
+    .dsmk-form-progress {
+        padding: 20px 15px;
+    }
+    
+    .dsmk-step-number {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+    }
+    
+    .dsmk-step-label {
+        font-size: 12px;
+    }
+    
+    .dsmk-progress-connector {
+        top: -20px;
+    }
+    
+    .dsmk-form {
+        padding: 20px;
+    }
+    
+    .dsmk-form-step h3 {
+        font-size: 20px;
+    }
+    
+    .dsmk-form-actions {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .dsmk-button {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .dsmk-button-prev {
+        order: 2;
+    }
+    
+    .dsmk-button-next,
+    .dsmk-button-submit {
+        order: 1;
+    }
+}
+
+/* Animation Effects */
+@keyframes slideUp {
+    from {transform: translateY(20px); opacity: 0;}
+    to {transform: translateY(0); opacity: 1;}
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+    40% {transform: translateY(-10px);}
+    60% {transform: translateY(-5px);}
+}
+
+.dsmk-form-wrapper {
+    animation: slideUp 0.5s ease-out;
+}
+
+.dsmk-success-icon svg {
+    animation: bounce 1s ease 0.5s;
+}
+
+/* Elementor Widget Styles */
+.dsmk-info-widget {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 5px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    padding: 0;
+}
+
+.dsmk-info-header {
+    background: linear-gradient(135deg, #2196f3, #1565c0);
+    color: #fff;
+    padding: 30px;
+    text-align: center;
+}
+
+.dsmk-name {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.dsmk-logo {
+    padding: 30px;
+    text-align: center;
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #eee;
+}
+
+.dsmk-logo img {
+    max-width: 100%;
+    height: auto;
+    max-height: 200px;
+    display: inline-block;
+}
+
+.dsmk-content {
+    padding: 30px;
+    text-align: center;
+}
+
+.dsmk-button-wrapper {
+    margin-top: 30px;
+}
+
+.dsmk-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #2196f3;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 600;
+    padding: 15px 30px;
+    border-radius: 6px;
+    text-decoration: none;
+    box-shadow: 0 4px 10px rgba(33, 150, 243, 0.3);
+    transition: all 0.3s ease;
+}
+
+.dsmk-button:hover {
+    background-color: #1976d2;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(33, 150, 243, 0.4);
+}
+
+.dsmk-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.3), 0 4px 10px rgba(33, 150, 243, 0.3);
+}
