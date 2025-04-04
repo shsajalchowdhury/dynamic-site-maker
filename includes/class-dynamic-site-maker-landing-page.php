@@ -96,29 +96,93 @@ class DSMK_Landing_Page {
 
         // Set the page to use Elementor
         update_post_meta( $page_id, '_elementor_edit_mode', 'builder' );
-
-        // Get the template data from the JSON file
-        $template_path = DSMK_PLUGIN_DIR . 'templates/elementor-template.json';
         
-        if ( ! file_exists( $template_path ) ) {
-            // If template doesn't exist, create a simple template with dynamic data
+        // Mark this as a Dynamic Site Maker landing page
+        update_post_meta( $page_id, '_is_dsmk_landing_page', true );
+        
+        // Set page to use canvas template (no header/footer)
+        update_post_meta( $page_id, '_wp_page_template', 'elementor_canvas' );
+        
+        // Get the template ID from the plugin settings
+        $template_id = get_option( 'dsmk_elementor_template_id', 0 );
+        
+        if ( empty( $template_id ) ) {
+            // If no template is set, use a default template
             $template_data = $this->get_default_template_data();
+            update_post_meta( $page_id, '_elementor_data', wp_slash( json_encode( $template_data ) ) );
         } else {
-            $template_data = json_decode( file_get_contents( $template_path ), true );
+            // Get the template content from Elementor's library
+            $template_data = $this->get_elementor_template_data( $template_id );
             
-            if ( json_last_error() !== JSON_ERROR_NONE ) {
+            if ( $template_data ) {
+                // Apply the template data to the page
+                update_post_meta( $page_id, '_elementor_data', wp_slash( json_encode( $template_data ) ) );
+                
+                // Copy all template meta data to ensure styles are preserved
+                $template_meta = get_post_meta( $template_id );
+                if ( ! empty( $template_meta ) ) {
+                    foreach ( $template_meta as $meta_key => $meta_value ) {
+                        // Skip keys we've already set or that shouldn't be copied
+                        if ( in_array( $meta_key, array( '_elementor_data', '_wp_page_template', 'post_content' ) ) ) {
+                            continue;
+                        }
+                        
+                        // Copy meta values that are related to Elementor
+                        if ( strpos( $meta_key, '_elementor_' ) === 0 || strpos( $meta_key, 'elementor_' ) === 0 ) {
+                            update_post_meta( $page_id, $meta_key, maybe_unserialize( $meta_value[0] ) );
+                        }
+                    }
+                }
+            } else {
+                // Fallback to default if template retrieval fails
                 $template_data = $this->get_default_template_data();
+                update_post_meta( $page_id, '_elementor_data', wp_slash( json_encode( $template_data ) ) );
             }
         }
-
-        // Set Elementor data
-        update_post_meta( $page_id, '_elementor_data', wp_slash( json_encode( $template_data ) ) );
 
         // Mark the page as having active template data
         update_post_meta( $page_id, '_elementor_template_type', 'wp-page' );
         update_post_meta( $page_id, '_elementor_version', ELEMENTOR_VERSION );
+        update_post_meta( $page_id, '_elementor_css', '' ); // Force regeneration of CSS
+        
+        // Clear any existing content
+        wp_update_post([
+            'ID' => $page_id,
+            'post_content' => '' // Empty the content
+        ]);
+        
+        // Regenerate Elementor CSS files
+        if ( class_exists( '\Elementor\Plugin' ) ) {
+            \Elementor\Plugin::$instance->files_manager->clear_cache();
+        }
 
         return true;
+    }
+    
+    /**
+     * Get Elementor template data by template ID
+     *
+     * @param int $template_id The Elementor template ID.
+     * @return array|false Template data or false on failure.
+     */
+    private function get_elementor_template_data( $template_id ) {
+        if ( ! class_exists( '\Elementor\Plugin' ) ) {
+            return false;
+        }
+        
+        $document = \Elementor\Plugin::$instance->documents->get( $template_id );
+        
+        if ( ! $document ) {
+            return false;
+        }
+        
+        $content = $document->get_elements_data();
+        
+        if ( empty( $content ) ) {
+            return false;
+        }
+        
+        return $content;
     }
 
     /**

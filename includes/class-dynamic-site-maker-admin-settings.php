@@ -79,6 +79,17 @@ class DSMK_Admin_Settings {
                 'default'           => __( 'Landing page created successfully! Redirecting...', 'dynamic-site-maker' ),
             )
         );
+        
+        register_setting(
+            'dsmk_settings',
+            'dsmk_elementor_template_id',
+            array(
+                'type'              => 'integer',
+                'description'       => __( 'Elementor Template ID', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'absint',
+                'default'           => 0,
+            )
+        );
 
         add_settings_section(
             'dsmk_general_settings',
@@ -107,6 +118,14 @@ class DSMK_Admin_Settings {
             'dsmk_form_success_message',
             __( 'Form Success Message', 'dynamic-site-maker' ),
             array( $this, 'form_success_message_callback' ),
+            'dsmk_settings',
+            'dsmk_general_settings'
+        );
+        
+        add_settings_field(
+            'dsmk_elementor_template_id',
+            __( 'Elementor Template', 'dynamic-site-maker' ),
+            array( $this, 'elementor_template_callback' ),
             'dsmk_settings',
             'dsmk_general_settings'
         );
@@ -480,5 +499,62 @@ class DSMK_Admin_Settings {
         <input type="text" id="dsmk_form_success_message" name="dsmk_form_success_message" value="<?php echo esc_attr( get_option( 'dsmk_form_success_message' ) ); ?>" class="regular-text">
         <p class="description"><?php esc_html_e( 'The message displayed after the form is submitted successfully.', 'dynamic-site-maker' ); ?></p>
         <?php
+    }
+    
+    /**
+     * Elementor template field callback
+     */
+    public function elementor_template_callback() {
+        $template_id = get_option( 'dsmk_elementor_template_id', 0 );
+        
+        // Get all Elementor templates
+        $templates = $this->get_elementor_templates();
+        ?>
+        <select id="dsmk_elementor_template_id" name="dsmk_elementor_template_id" class="regular-text">
+            <option value="0"><?php esc_html_e( 'Select a template', 'dynamic-site-maker' ); ?></option>
+            <?php foreach ( $templates as $id => $name ) : ?>
+                <option value="<?php echo esc_attr( $id ); ?>" <?php selected( $template_id, $id ); ?>>
+                    <?php echo esc_html( $name ); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <p class="description"><?php esc_html_e( 'Select an Elementor template to use for landing pages.', 'dynamic-site-maker' ); ?></p>
+        <p class="description"><?php esc_html_e( 'To mark an image as a logo, add the CSS class "dsmk-logo" to the image widget.', 'dynamic-site-maker' ); ?></p>
+        <p class="description"><?php esc_html_e( 'To mark a button for affiliate link, add the CSS class "dsmk-affiliate" to the button widget or use {{affiliate_link}} as the URL.', 'dynamic-site-maker' ); ?></p>
+        <?php
+    }
+    
+    /**
+     * Get all Elementor templates
+     *
+     * @return array Array of template IDs and names.
+     */
+    private function get_elementor_templates() {
+        $templates = array();
+        
+        // Check if Elementor is active
+        if ( ! did_action( 'elementor/loaded' ) ) {
+            return $templates;
+        }
+        
+        // Get all Elementor templates
+        $args = array(
+            'post_type'      => 'elementor_library',
+            'posts_per_page' => -1,
+            'post_status'    => 'publish',
+        );
+        
+        $query = new WP_Query( $args );
+        
+        if ( $query->have_posts() ) {
+            while ( $query->have_posts() ) {
+                $query->the_post();
+                $templates[ get_the_ID() ] = get_the_title();
+            }
+        }
+        
+        wp_reset_postdata();
+        
+        return $templates;
     }
 }
