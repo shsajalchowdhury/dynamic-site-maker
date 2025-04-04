@@ -47,6 +47,10 @@ class DSMK_Admin_Settings {
      * Register settings
      */
     public function register_settings() {
+        // Explicitly define sanitization callbacks
+        $text_sanitize = 'sanitize_text_field';
+        $int_sanitize = 'absint';
+        
         register_setting(
             'dsmk_settings',
             'dsmk_page_title_format',
@@ -135,66 +139,87 @@ class DSMK_Admin_Settings {
      * Display admin page
      */
     public function display_admin_page() {
-        // Enqueue admin assets
-        wp_enqueue_style( 'dsmk-admin-style', DSMK_PLUGIN_URL . 'assets/css/admin-style.css', array(), DSMK_VERSION );
-        wp_enqueue_script( 'dsmk-admin-script', DSMK_PLUGIN_URL . 'assets/js/admin-script.js', array( 'jquery', 'jquery-ui-tabs', 'wp-color-picker' ), DSMK_VERSION, true );
-        wp_localize_script( 'dsmk-admin-script', 'dsmk_admin', array(
-            'ajax_url' => admin_url( 'admin-ajax.php' ),
-            'nonce'    => wp_create_nonce( 'dsmk_admin_nonce' ),
-        ));
+        // Get current tab with nonce verification
+        $current_tab = 'settings'; // Default tab
         
-        // Get current tab
-        $current_tab = isset( $_GET['tab'] ) ? sanitize_text_field( wp_unslash( $_GET['tab'] ) ) : 'settings';
+        if ( isset( $_GET['tab'] ) ) {
+            // Verify the request is legitimate
+            if ( isset( $_GET['_wpnonce'] ) && wp_verify_nonce( sanitize_key( $_GET['_wpnonce'] ), 'dsmk_switch_tab' ) ) {
+                $current_tab = sanitize_text_field( wp_unslash( $_GET['tab'] ) );
+            } else {
+                // If no valid nonce, still allow tab switching but add an admin notice
+                $current_tab = sanitize_text_field( wp_unslash( $_GET['tab'] ) );
+                add_action( 'admin_notices', array( $this, 'display_admin_notice' ) );
+            }
+        }
+        
+        // Standard WordPress wrap - this ensures notices appear in the correct location
         ?>
-        <div class="wrap dsmk-admin">
-            <div class="dsmk-header">
-                <div class="dsmk-logo">
-                    <h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
-                </div>
+        <div class="wrap">
+            <h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+            
+            <?php
+            // Display settings errors/notices
+            settings_errors();
+            
+            // Enqueue admin assets after the standard WordPress header
+            wp_enqueue_style( 'dsmk-admin-style', DSMK_PLUGIN_URL . 'assets/css/admin-style.css', array(), DSMK_VERSION );
+            wp_enqueue_script( 'dsmk-admin-script', DSMK_PLUGIN_URL . 'assets/js/admin-script.js', array( 'jquery', 'jquery-ui-tabs', 'wp-color-picker' ), DSMK_VERSION, true );
+            wp_localize_script( 'dsmk-admin-script', 'dsmk_admin', array(
+                'ajax_url' => admin_url( 'admin-ajax.php' ),
+                'nonce'    => wp_create_nonce( 'dsmk_admin_nonce' ),
+            ));
+            ?>
+            
+            <div class="dsmk-admin">
                 <div class="dsmk-version">
-                    <span><?php echo esc_html__( 'Version', 'dynamic-site-maker' ) . ' ' . DSMK_VERSION; ?></span>
+                    <span><?php echo esc_html__( 'Version', 'dynamic-site-maker' ) . ' ' . esc_html( DSMK_VERSION ); ?></span>
+                </div>
+                
+                <div class="dsmk-nav-container">
+                    <nav class="dsmk-nav">
+                        <a href="?page=dynamic-site-maker&tab=settings&_wpnonce=<?php echo esc_attr( wp_create_nonce( 'dsmk_switch_tab' ) ); ?>" class="dsmk-nav-tab <?php echo $current_tab === 'settings' ? 'active' : ''; ?>">
+                            <span class="dashicons dashicons-admin-settings"></span>
+                            <?php esc_html_e( 'Settings', 'dynamic-site-maker' ); ?>
+                        </a>
+                        <a href="?page=dynamic-site-maker&tab=pages&_wpnonce=<?php echo esc_attr( wp_create_nonce( 'dsmk_switch_tab' ) ); ?>" class="dsmk-nav-tab <?php echo $current_tab === 'pages' ? 'active' : ''; ?>">
+                            <span class="dashicons dashicons-admin-page"></span>
+                            <?php esc_html_e( 'Landing Pages', 'dynamic-site-maker' ); ?>
+                        </a>
+                        <a href="?page=dynamic-site-maker&tab=help&_wpnonce=<?php echo esc_attr( wp_create_nonce( 'dsmk_switch_tab' ) ); ?>" class="dsmk-nav-tab <?php echo $current_tab === 'help' ? 'active' : ''; ?>">
+                            <span class="dashicons dashicons-editor-help"></span>
+                            <?php esc_html_e( 'Help', 'dynamic-site-maker' ); ?>
+                        </a>
+                    </nav>
+                </div>
+                
+                <div class="dsmk-content">
+                    <?php
+                    // Display current tab content
+                    switch ( $current_tab ) {
+                        case 'pages':
+                            $this->display_pages_tab();
+                            break;
+                        case 'help':
+                            $this->display_help_tab();
+                            break;
+                        default:
+                            $this->display_settings_tab();
+                    }
+                    ?>
                 </div>
             </div>
-            
-            <div class="dsmk-nav-container">
-                <nav class="dsmk-nav">
-                    <a href="?page=dynamic-site-maker&tab=settings" class="dsmk-nav-tab <?php echo $current_tab === 'settings' ? 'active' : ''; ?>">
-                        <span class="dashicons dashicons-admin-settings"></span>
-                        <?php esc_html_e( 'Settings', 'dynamic-site-maker' ); ?>
-                    </a>
-                    <a href="?page=dynamic-site-maker&tab=templates" class="dsmk-nav-tab <?php echo $current_tab === 'templates' ? 'active' : ''; ?>">
-                        <span class="dashicons dashicons-layout"></span>
-                        <?php esc_html_e( 'Templates', 'dynamic-site-maker' ); ?>
-                    </a>
-                    <a href="?page=dynamic-site-maker&tab=pages" class="dsmk-nav-tab <?php echo $current_tab === 'pages' ? 'active' : ''; ?>">
-                        <span class="dashicons dashicons-admin-page"></span>
-                        <?php esc_html_e( 'Landing Pages', 'dynamic-site-maker' ); ?>
-                    </a>
-                    <a href="?page=dynamic-site-maker&tab=help" class="dsmk-nav-tab <?php echo $current_tab === 'help' ? 'active' : ''; ?>">
-                        <span class="dashicons dashicons-editor-help"></span>
-                        <?php esc_html_e( 'Help', 'dynamic-site-maker' ); ?>
-                    </a>
-                </nav>
-            </div>
-            
-            <div class="dsmk-content">
-                <?php
-                // Display current tab content
-                switch ( $current_tab ) {
-                    case 'templates':
-                        $this->display_templates_tab();
-                        break;
-                    case 'pages':
-                        $this->display_pages_tab();
-                        break;
-                    case 'help':
-                        $this->display_help_tab();
-                        break;
-                    default:
-                        $this->display_settings_tab();
-                }
-                ?>
-            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Display admin notice
+     */
+    public function display_admin_notice() {
+        ?>
+        <div class="notice notice-warning is-dismissible">
+            <p><?php esc_html_e( 'Dynamic Site Maker: Tab switched without nonce verification.', 'dynamic-site-maker' ); ?></p>
         </div>
         <?php
     }
@@ -232,104 +257,6 @@ class DSMK_Admin_Settings {
                             <span class="dashicons dashicons-clipboard"></span>
                         </button>
                     </div>
-                </div>
-            </div>
-        </div>
-        <?php
-    }
-
-    /**
-     * Display templates tab
-     */
-    private function display_templates_tab() {
-        ?>
-        <div class="dsmk-templates-container">
-            <div class="dsmk-card">
-                <div class="dsmk-card-header">
-                    <h2><?php esc_html_e( 'Available Templates', 'dynamic-site-maker' ); ?></h2>
-                </div>
-                <div class="dsmk-card-body">
-                    <div class="dsmk-template-selection">
-                        <div class="dsmk-template-item dsmk-template-active">
-                            <div class="dsmk-template-preview">
-                                <img src="<?php echo esc_url( DSMK_PLUGIN_URL . 'assets/images/template-default.jpg' ); ?>" alt="<?php esc_attr_e( 'Default Template', 'dynamic-site-maker' ); ?>">
-                                <div class="dsmk-template-actions">
-                                    <button type="button" class="dsmk-button dsmk-button-secondary dsmk-button-preview" data-template="default">
-                                        <?php esc_html_e( 'Preview', 'dynamic-site-maker' ); ?>
-                                    </button>
-                                    <button type="button" class="dsmk-button dsmk-button-primary dsmk-button-select" data-template="default">
-                                        <?php esc_html_e( 'Active', 'dynamic-site-maker' ); ?>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="dsmk-template-info">
-                                <h3><?php esc_html_e( 'Default Template', 'dynamic-site-maker' ); ?></h3>
-                                <p><?php esc_html_e( 'A clean and modern design for your landing pages.', 'dynamic-site-maker' ); ?></p>
-                            </div>
-                        </div>
-                        
-                        <div class="dsmk-template-item">
-                            <div class="dsmk-template-preview">
-                                <img src="<?php echo esc_url( DSMK_PLUGIN_URL . 'assets/images/template-business.jpg' ); ?>" alt="<?php esc_attr_e( 'Business Template', 'dynamic-site-maker' ); ?>">
-                                <div class="dsmk-template-actions">
-                                    <button type="button" class="dsmk-button dsmk-button-secondary dsmk-button-preview" data-template="business">
-                                        <?php esc_html_e( 'Preview', 'dynamic-site-maker' ); ?>
-                                    </button>
-                                    <button type="button" class="dsmk-button dsmk-button-primary dsmk-button-select" data-template="business">
-                                        <?php esc_html_e( 'Select', 'dynamic-site-maker' ); ?>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="dsmk-template-info">
-                                <h3><?php esc_html_e( 'Business Template', 'dynamic-site-maker' ); ?></h3>
-                                <p><?php esc_html_e( 'Professional design for business and corporate landing pages.', 'dynamic-site-maker' ); ?></p>
-                            </div>
-                        </div>
-                        
-                        <div class="dsmk-template-upload">
-                            <div class="dsmk-upload-placeholder">
-                                <span class="dashicons dashicons-plus"></span>
-                                <h3><?php esc_html_e( 'Custom Template', 'dynamic-site-maker' ); ?></h3>
-                                <p><?php esc_html_e( 'Upload your own Elementor template', 'dynamic-site-maker' ); ?></p>
-                                <button type="button" class="dsmk-button dsmk-button-primary dsmk-upload-button">
-                                    <?php esc_html_e( 'Upload Template', 'dynamic-site-maker' ); ?>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="dsmk-card">
-                <div class="dsmk-card-header">
-                    <h2><?php esc_html_e( 'Template Configuration', 'dynamic-site-maker' ); ?></h2>
-                </div>
-                <div class="dsmk-card-body">
-                    <p><?php esc_html_e( 'Configure how dynamic fields are inserted into your template.', 'dynamic-site-maker' ); ?></p>
-                    
-                    <form class="dsmk-form">
-                        <div class="dsmk-form-field">
-                            <label for="dsmk-name-selector"><?php esc_html_e( 'Name Field Selector', 'dynamic-site-maker' ); ?></label>
-                            <input type="text" id="dsmk-name-selector" name="dsmk_name_selector" value="{{name}}" class="regular-text">
-                            <p class="description"><?php esc_html_e( 'The placeholder for user name in your template.', 'dynamic-site-maker' ); ?></p>
-                        </div>
-                        
-                        <div class="dsmk-form-field">
-                            <label for="dsmk-logo-selector"><?php esc_html_e( 'Logo Field Selector', 'dynamic-site-maker' ); ?></label>
-                            <input type="text" id="dsmk-logo-selector" name="dsmk_logo_selector" value="{{logo_id}}" class="regular-text">
-                            <p class="description"><?php esc_html_e( 'The placeholder for logo ID in your template.', 'dynamic-site-maker' ); ?></p>
-                        </div>
-                        
-                        <div class="dsmk-form-field">
-                            <label for="dsmk-affiliate-selector"><?php esc_html_e( 'Affiliate Link Selector', 'dynamic-site-maker' ); ?></label>
-                            <input type="text" id="dsmk-affiliate-selector" name="dsmk_affiliate_selector" value="{{affiliate_link}}" class="regular-text">
-                            <p class="description"><?php esc_html_e( 'The placeholder for affiliate link in your template.', 'dynamic-site-maker' ); ?></p>
-                        </div>
-                        
-                        <button type="submit" class="dsmk-button dsmk-button-primary">
-                            <?php esc_html_e( 'Save Configuration', 'dynamic-site-maker' ); ?>
-                        </button>
-                    </form>
                 </div>
             </div>
         </div>

@@ -41,8 +41,8 @@ $has_submitted = $spam_protection->has_submitted();
                         <path fill="#2196f3" d="M19,2H5C3.89,2 3,2.89 3,4V20A2,2 0 0,0 5,22H19A2,2 0 0,0 21,20V4C21,2.89 20.1,2 19,2M11,4H13V9H11V4M11,11H13V19H11V11M5,4H9V9H5V4M5,11H9V19H5V11M15,4H19V9H15V4M15,11H19V19H15V11Z"/>
                     </svg>
                 </div>
-                <h2><?php esc_html_e( 'Create Your Landing Page', 'dynamic-site-maker' ); ?></h2>
-                <p><?php esc_html_e( 'Fill out the form below to generate your custom landing page.', 'dynamic-site-maker' ); ?></p>
+                <h2><?php esc_html_e( 'Create Your Site', 'dynamic-site-maker' ); ?></h2>
+                <p><?php esc_html_e( 'Fill out the form below to generate your custom site.', 'dynamic-site-maker' ); ?></p>
             </div>
 
             <!-- Progress Steps -->
@@ -76,7 +76,7 @@ $has_submitted = $spam_protection->has_submitted();
                     
                     <div class="dsmk-form-field">
                         <label for="dsmk-name" class="dsmk-form-label">
-                            <?php esc_html_e( 'Your Name', 'dynamic-site-maker' ); ?>
+                            <?php esc_html_e( 'Affiliate Name', 'dynamic-site-maker' ); ?>
                             <span class="dsmk-form-required">*</span>
                         </label>
                         <div class="dsmk-input-wrapper">
@@ -89,7 +89,7 @@ $has_submitted = $spam_protection->has_submitted();
                                    id="dsmk-name" 
                                    name="name" 
                                    class="dsmk-form-input" 
-                                   placeholder="<?php esc_attr_e( 'Enter your full name', 'dynamic-site-maker' ); ?>"
+                                   placeholder="<?php esc_attr_e( 'Enter Affiliate Name', 'dynamic-site-maker' ); ?>"
                                    required>
                         </div>
                     </div>
@@ -201,7 +201,7 @@ $has_submitted = $spam_protection->has_submitted();
                                    required>
                         </div>
                         <p class="dsmk-form-description">
-                            <?php esc_html_e( 'This link will be used in your landing page.', 'dynamic-site-maker' ); ?>
+                            <?php esc_html_e( 'This link will be used in your site.', 'dynamic-site-maker' ); ?>
                         </p>
                     </div>
                     
@@ -216,7 +216,7 @@ $has_submitted = $spam_protection->has_submitted();
                         </button>
                         
                         <button type="submit" class="dsmk-button dsmk-button-submit">
-                            <?php esc_html_e( 'Generate Landing Page', 'dynamic-site-maker' ); ?>
+                            <?php esc_html_e( 'Generate Site', 'dynamic-site-maker' ); ?>
                             <span class="dsmk-button-icon-right">
                                 <svg viewBox="0 0 24 24" width="16" height="16">
                                     <path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" />
@@ -233,7 +233,7 @@ $has_submitted = $spam_protection->has_submitted();
                     <div class="dsmk-loading-spinner">
                         <div class="dsmk-spinner-inner"></div>
                     </div>
-                    <p><?php esc_html_e( 'Creating your landing page...', 'dynamic-site-maker' ); ?></p>
+                    <p><?php esc_html_e( 'Creating your site...', 'dynamic-site-maker' ); ?></p>
                 </div>
             </form>
             
@@ -244,8 +244,8 @@ $has_submitted = $spam_protection->has_submitted();
                         <path fill="currentColor" d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M11,16.5L6.5,12L7.91,10.59L11,13.67L16.59,8.09L18,9.5L11,16.5Z" />
                     </svg>
                 </div>
-                <h3><?php echo esc_html( get_option( 'dsmk_form_success_message', __( 'Landing page created successfully!', 'dynamic-site-maker' ) ) ); ?></h3>
-                <p><?php esc_html_e( 'Redirecting you to your new page...', 'dynamic-site-maker' ); ?></p>
+                <h3><?php echo esc_html( get_option( 'dsmk_form_success_message', __( 'Site created successfully!', 'dynamic-site-maker' ) ) ); ?></h3>
+                <p><?php esc_html_e( 'Redirecting you to your new site...', 'dynamic-site-maker' ); ?></p>
                 <div class="dsmk-redirect-progress">
                     <div class="dsmk-redirect-bar"></div>
                 </div>

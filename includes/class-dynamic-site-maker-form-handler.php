@@ -51,7 +51,9 @@ class DSMK_Form_Handler {
         if ( empty( $_POST['affiliate_link'] ) ) {
             wp_send_json_error( array( 'message' => __( 'Affiliate link is required.', 'dynamic-site-maker' ) ) );
         }
-        $affiliate_link = esc_url_raw( trim( wp_unslash( $_POST['affiliate_link'] ) ) );
+        $affiliate_link = sanitize_text_field( wp_unslash( $_POST['affiliate_link'] ) );
+        // Ensure it's a valid URL
+        $affiliate_link = esc_url_raw( $affiliate_link );
 
         // Process logo upload
         $logo_id = 0;
@@ -67,8 +69,16 @@ class DSMK_Form_Handler {
                 'test_form' => false,
             );
 
+            // Validate file exists and has a name
+            if ( ! isset( $_FILES['logo']['name'] ) || empty( $_FILES['logo']['name'] ) ) {
+                wp_send_json_error( array( 'message' => __( 'No logo file was uploaded.', 'dynamic-site-maker' ) ) );
+            }
+            
+            // Sanitize the file name
+            $file_name = sanitize_file_name( wp_unslash( $_FILES['logo']['name'] ) );
+            
             // Validate file type
-            $file_info = wp_check_filetype( basename( $_FILES['logo']['name'] ) );
+            $file_info = wp_check_filetype( basename( $file_name ) );
             $allowed_types = array( 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'svg' => 'image/svg+xml' );
             
             if ( empty( $file_info['ext'] ) || ! array_key_exists( $file_info['ext'], $allowed_types ) ) {
@@ -76,7 +86,7 @@ class DSMK_Form_Handler {
             }
 
             // Validate file size (5MB max)
-            if ( $_FILES['logo']['size'] > 5 * 1024 * 1024 ) {
+            if ( ! isset( $_FILES['logo']['size'] ) || $_FILES['logo']['size'] > 5 * 1024 * 1024 ) {
                 wp_send_json_error( array( 'message' => __( 'Logo file size exceeds the limit of 5MB.', 'dynamic-site-maker' ) ) );
             }
 
@@ -127,7 +137,7 @@ class DSMK_Form_Handler {
 
         // Return success with the URL of the new page
         wp_send_json_success( array(
-            'message' => __( 'Landing page created successfully!', 'dynamic-site-maker' ),
+            'message' => __( 'Site  created successfully!', 'dynamic-site-maker' ),
             'url'     => get_permalink( $page_id ),
         ) );
     }
@@ -141,8 +151,8 @@ class DSMK_Form_Handler {
         return array(
             'name' => array(
                 'type'        => 'text',
-                'label'       => __( 'Your Name', 'dynamic-site-maker' ),
-                'placeholder' => __( 'Enter your name', 'dynamic-site-maker' ),
+                'label'       => __( 'Affiliate Name', 'dynamic-site-maker' ),
+                'placeholder' => __( 'Enter Affiliate Name', 'dynamic-site-maker' ),
                 'required'    => true,
             ),
             'logo' => array(

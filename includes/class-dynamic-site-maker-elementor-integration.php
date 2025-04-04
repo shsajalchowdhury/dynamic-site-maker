@@ -27,12 +27,6 @@ class DSMK_Elementor_Integration {
         // Filter Elementor template content on render
         add_filter( 'elementor/frontend/the_content', array( $this, 'process_dynamic_content' ) );
         
-        // Add custom Elementor widget category
-        add_action( 'elementor/elements/categories_registered', array( $this, 'add_elementor_widget_category' ) );
-        
-        // Register custom Elementor widgets
-        add_action( 'elementor/widgets/widgets_registered', array( $this, 'register_widgets' ) );
-        
         // Process dynamic content in Elementor data before rendering
         add_filter( 'elementor/frontend/builder_content_data', array( $this, 'process_template_data' ), 10, 2 );
         
@@ -258,37 +252,6 @@ class DSMK_Elementor_Integration {
         }
         
         return $elements;
-    }
-
-    /**
-     * Add Elementor widget category
-     *
-     * @param \Elementor\Elements_Manager $elements_manager Elements manager instance.
-     */
-    public function add_elementor_widget_category( $elements_manager ) {
-        $elements_manager->add_category(
-            'dynamic-site-maker',
-            array(
-                'title' => __( 'Dynamic Site Maker', 'dynamic-site-maker' ),
-                'icon'  => 'fa fa-plug',
-            )
-        );
-    }
-
-    /**
-     * Register custom Elementor widgets
-     */
-    public function register_widgets() {
-        // Make sure Elementor is active
-        if ( ! did_action( 'elementor/loaded' ) ) {
-            return;
-        }
-
-        // Include widget files
-        require_once DSMK_PLUGIN_DIR . 'includes/elementor/widgets/class-dynamic-site-maker-info-widget.php';
-
-        // Register the widgets
-        \Elementor\Plugin::instance()->widgets_manager->register_widget_type( new DSMK_Info_Widget() );
     }
 
     /**
