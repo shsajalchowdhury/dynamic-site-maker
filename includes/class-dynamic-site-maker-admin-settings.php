@@ -304,13 +304,31 @@ class DSMK_Admin_Settings {
                     
                     <div class="dsmk-help-section">
                         <h3><span class="dashicons dashicons-admin-customizer"></span> <?php esc_html_e( 'Customizing Templates', 'dynamic-site-maker' ); ?></h3>
-                        <p><?php esc_html_e( 'You can use any Elementor template with your plugin. Just make sure to include the following placeholders:', 'dynamic-site-maker' ); ?></p>
-                        <ul>
-                            <li><code>{{name}}</code> - <?php esc_html_e( 'For the user\'s name', 'dynamic-site-maker' ); ?></li>
-                            <li><code>{{logo_id}}</code> - <?php esc_html_e( 'For the logo image ID', 'dynamic-site-maker' ); ?></li>
-                            <li><code>{{logo_url}}</code> - <?php esc_html_e( 'For the logo image URL', 'dynamic-site-maker' ); ?></li>
-                            <li><code>{{affiliate_link}}</code> - <?php esc_html_e( 'For the affiliate link', 'dynamic-site-maker' ); ?></li>
-                        </ul>
+                        <p><?php esc_html_e( 'You can use any Elementor template with your plugin. Follow these steps to set up dynamic content:', 'dynamic-site-maker' ); ?></p>
+                        
+                        <h4><?php esc_html_e( 'For Logo Images:', 'dynamic-site-maker' ); ?></h4>
+                        <ol>
+                            <li><?php esc_html_e( 'Add an Image widget to your Elementor template', 'dynamic-site-maker' ); ?></li>
+                            <li><?php esc_html_e( 'Go to the Advanced tab in the widget settings', 'dynamic-site-maker' ); ?></li>
+                            <li><?php esc_html_e( 'Add "dsmk-logo" to the CSS Classes field', 'dynamic-site-maker' ); ?></li>
+                            <li><?php esc_html_e( 'This image will be automatically replaced with the user\'s uploaded logo', 'dynamic-site-maker' ); ?></li>
+                        </ol>
+                        
+                        <h4><?php esc_html_e( 'For Affiliate Links:', 'dynamic-site-maker' ); ?></h4>
+                        <ol>
+                            <li><?php esc_html_e( 'Add a Button widget to your Elementor template', 'dynamic-site-maker' ); ?></li>
+                            <li><?php esc_html_e( 'Either:', 'dynamic-site-maker' ); ?>
+                                <ul>
+                                    <li><?php esc_html_e( 'Go to the Advanced tab and add "dsmk-affiliate" to the CSS Classes field, or', 'dynamic-site-maker' ); ?></li>
+                                    <li><?php esc_html_e( 'Set the button link URL to "{{affiliate_link}}"', 'dynamic-site-maker' ); ?></li>
+                                </ul>
+                            </li>
+                            <li><?php esc_html_e( 'This button will automatically link to the user\'s affiliate URL', 'dynamic-site-maker' ); ?></li>
+                        </ol>
+                        
+                        <div class="dsmk-notice dsmk-notice--info">
+                            <p><strong><?php esc_html_e( 'Important:', 'dynamic-site-maker' ); ?></strong> <?php esc_html_e( 'The plugin will only replace elements with the specific CSS classes mentioned above. Other elements in your template will remain unchanged.', 'dynamic-site-maker' ); ?></p>
+                        </div>
                     </div>
                     
                     <div class="dsmk-help-section">
