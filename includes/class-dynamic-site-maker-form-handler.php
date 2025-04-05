@@ -47,6 +47,15 @@ class DSMK_Form_Handler {
         }
         $name = sanitize_text_field( wp_unslash( $_POST['name'] ) );
 
+        // Validate email
+        if ( empty( $_POST['email'] ) ) {
+            wp_send_json_error( array( 'message' => __( 'Email is required.', 'dynamic-site-maker' ) ) );
+        }
+        $email = sanitize_email( wp_unslash( $_POST['email'] ) );
+        if ( ! is_email( $email ) ) {
+            wp_send_json_error( array( 'message' => __( 'Please enter a valid email address.', 'dynamic-site-maker' ) ) );
+        }
+
         // Validate affiliate link
         if ( empty( $_POST['affiliate_link'] ) ) {
             wp_send_json_error( array( 'message' => __( 'Affiliate link is required.', 'dynamic-site-maker' ) ) );
@@ -123,6 +132,7 @@ class DSMK_Form_Handler {
         $page_id = $landing_page->create_page(
             array(
                 'name'           => $name,
+                'email'          => $email,
                 'logo_id'        => $logo_id,
                 'affiliate_link' => $affiliate_link,
             )
@@ -153,6 +163,12 @@ class DSMK_Form_Handler {
                 'type'        => 'text',
                 'label'       => __( 'Affiliate Name', 'dynamic-site-maker' ),
                 'placeholder' => __( 'Enter Affiliate Name', 'dynamic-site-maker' ),
+                'required'    => true,
+            ),
+            'email' => array(
+                'type'        => 'email',
+                'label'       => __( 'Email Address', 'dynamic-site-maker' ),
+                'placeholder' => __( 'Enter Email Address', 'dynamic-site-maker' ),
                 'required'    => true,
             ),
             'logo' => array(

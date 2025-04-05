@@ -30,6 +30,7 @@ $step1_title = get_option('dsmk_shortcode_step1_title', 'Your Information');
 $step2_title = get_option('dsmk_shortcode_step2_title', 'Upload Your Logo');
 $step3_title = get_option('dsmk_shortcode_step3_title', 'Add Your Links');
 $name_label = get_option('dsmk_shortcode_name_label', 'Affiliate Name');
+$email_label = get_option('dsmk_shortcode_email_label', 'Email Address');
 $logo_label = get_option('dsmk_shortcode_logo_label', 'Your Logo');
 $link_label = get_option('dsmk_shortcode_link_label', 'Affiliate Link');
 $step1_label = get_option('dsmk_shortcode_step1_label', 'Your Info');
@@ -167,6 +168,21 @@ function adjustBrightness($hex, $steps) {
                         </div>
                     </div>
                     
+                    <div class="dsmk-form-field">
+                        <label for="dsmk-email" class="dsmk-form-label">
+                            <?php echo esc_html($email_label); ?>
+                            <span class="dsmk-form-required">*</span>
+                        </label>
+                        <div class="dsmk-input-wrapper">
+                            <input type="email" 
+                                   id="dsmk-email" 
+                                   name="email" 
+                                   class="dsmk-form-input" 
+                                   placeholder="<?php esc_attr_e( 'Enter Email Address', 'dynamic-site-maker' ); ?>"
+                                   required>
+                        </div>
+                    </div>
+                    
                     <div class="dsmk-form-actions">
                         <button type="button" class="dsmk-button dsmk-button-next" data-next="2">
                             <?php esc_html_e( 'Next Step', 'dynamic-site-maker' ); ?>
@@ -226,7 +242,7 @@ function adjustBrightness($hex, $steps) {
                                 <h4><?php esc_html_e( 'Logo Size Guide:', 'dynamic-site-maker' ); ?></h4>
                                 <ul>
                                     <li><?php esc_html_e( 'Recommended size: 716x138 pixels', 'dynamic-site-maker' ); ?></li>
-                                    <li><?php esc_html_e( 'Upload the logo under 1 MB', 'dynamic-site-maker' ); ?></li>
+                                    <li><?php esc_html_e( 'Upload a logo image (maximum size: 1MB)', 'dynamic-site-maker' ); ?></li>
                                 </ul>
                             </div>
                         </div>

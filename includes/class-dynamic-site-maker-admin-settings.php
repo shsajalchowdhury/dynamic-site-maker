@@ -238,6 +238,17 @@ class DSMK_Admin_Settings {
 
         register_setting(
             'dsmk_customization_settings',
+            'dsmk_shortcode_email_label',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Email field label', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default'           => 'Email Address',
+            )
+        );
+
+        register_setting(
+            'dsmk_customization_settings',
             'dsmk_shortcode_logo_label',
             array(
                 'type'              => 'string',
@@ -942,6 +953,10 @@ class DSMK_Admin_Settings {
             <div class="dsmk-field-label">
                 <label for="dsmk_shortcode_name_label"><?php esc_html_e( 'Name Field Label', 'dynamic-site-maker' ); ?></label>
                 <input type="text" id="dsmk_shortcode_name_label" name="dsmk_shortcode_name_label" value="<?php echo esc_attr( get_option( 'dsmk_shortcode_name_label' ) ); ?>" class="regular-text">
+            </div>
+            <div class="dsmk-field-label">
+                <label for="dsmk_shortcode_email_label"><?php esc_html_e( 'Email Field Label', 'dynamic-site-maker' ); ?></label>
+                <input type="text" id="dsmk_shortcode_email_label" name="dsmk_shortcode_email_label" value="<?php echo esc_attr( get_option( 'dsmk_shortcode_email_label' ) ); ?>" class="regular-text">
             </div>
             <div class="dsmk-field-label">
                 <label for="dsmk_shortcode_logo_label"><?php esc_html_e( 'Logo Field Label', 'dynamic-site-maker' ); ?></label>

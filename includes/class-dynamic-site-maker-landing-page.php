@@ -53,6 +53,7 @@ class DSMK_Landing_Page {
 
         // Store the form data as meta fields
         update_post_meta( $page_id, '_dsmk_name', sanitize_text_field( $data['name'] ) );
+        update_post_meta( $page_id, '_dsmk_email', sanitize_email( $data['email'] ) );
         update_post_meta( $page_id, '_dsmk_logo_id', absint( $data['logo_id'] ) );
         update_post_meta( $page_id, '_dsmk_affiliate_link', esc_url_raw( $data['affiliate_link'] ) );
 
