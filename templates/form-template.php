@@ -19,7 +19,85 @@ $spam_protection = new DSMK_Spam_Protection();
 
 // Check if the user has already submitted the form
 $has_submitted = $spam_protection->has_submitted();
+
+// Get customization settings
+$page_title = get_option('dsmk_shortcode_page_title', 'Create Your Site');
+$page_description = get_option('dsmk_shortcode_page_description', 'Fill out the form below to generate your custom site.');
+$header_bg_color = get_option('dsmk_shortcode_header_bg_color', '#2196f3');
+$button_color = get_option('dsmk_shortcode_button_color', '#2196f3');
+$text_color = get_option('dsmk_shortcode_text_color', '#333333');
+$step1_title = get_option('dsmk_shortcode_step1_title', 'Your Information');
+$step2_title = get_option('dsmk_shortcode_step2_title', 'Upload Your Logo');
+$step3_title = get_option('dsmk_shortcode_step3_title', 'Add Your Links');
+$name_label = get_option('dsmk_shortcode_name_label', 'Affiliate Name');
+$logo_label = get_option('dsmk_shortcode_logo_label', 'Your Logo');
+$link_label = get_option('dsmk_shortcode_link_label', 'Affiliate Link');
+$step1_label = get_option('dsmk_shortcode_step1_label', 'Your Info');
+$step2_label = get_option('dsmk_shortcode_step2_label', 'Logo');
+$step3_label = get_option('dsmk_shortcode_step3_label', 'Links');
+
+// Generate custom CSS based on settings
+$custom_css = "
+.dsmk-form-header {
+    background: linear-gradient(135deg, {$header_bg_color}, " . adjustBrightness($header_bg_color, -20) . ");
+}
+.dsmk-button {
+    background-color: {$button_color};
+    color: #ffffff !important;
+}
+.dsmk-button:hover {
+    background-color: " . adjustBrightness($button_color, -10) . ";
+}
+.dsmk-button-prev {
+    background-color: #f5f5f5;
+    color: #333333 !important;
+}
+.dsmk-button-prev:hover {
+    background-color: #e0e0e0;
+    color: #333333 !important;
+}
+.dsmk-progress-step.active .dsmk-step-number,
+.dsmk-progress-connector.active {
+    background-color: {$button_color};
+}
+.dsmk-progress-step.active .dsmk-step-label {
+    color: {$button_color};
+}
+.dsmk-form-step h3,
+.dsmk-form-label {
+    color: {$text_color};
+}
+";
+
+/**
+ * Helper function to adjust color brightness
+ *
+ * @param string $hex Hex color code
+ * @param int $steps Steps to adjust brightness (-255 to 255)
+ * @return string Adjusted hex color
+ */
+function adjustBrightness($hex, $steps) {
+    // Remove # if present
+    $hex = ltrim($hex, '#');
+    
+    // Convert to RGB
+    $r = hexdec(substr($hex, 0, 2));
+    $g = hexdec(substr($hex, 2, 2));
+    $b = hexdec(substr($hex, 4, 2));
+    
+    // Adjust brightness
+    $r = max(0, min(255, $r + $steps));
+    $g = max(0, min(255, $g + $steps));
+    $b = max(0, min(255, $b + $steps));
+    
+    // Convert back to hex
+    return '#' . sprintf('%02x%02x%02x', $r, $g, $b);
+}
 ?>
+
+<style>
+<?php echo $custom_css; ?>
+</style>
 
 <div class="dsmk-form-container">
     <?php if ( $has_submitted ) : ?>
@@ -38,11 +116,11 @@ $has_submitted = $spam_protection->has_submitted();
             <div class="dsmk-form-header">
                 <div class="dsmk-form-logo">
                     <svg viewBox="0 0 24 24" width="48" height="48">
-                        <path fill="#2196f3" d="M19,2H5C3.89,2 3,2.89 3,4V20A2,2 0 0,0 5,22H19A2,2 0 0,0 21,20V4C21,2.89 20.1,2 19,2M11,4H13V9H11V4M11,11H13V19H11V11M5,4H9V9H5V4M5,11H9V19H5V11M15,4H19V9H15V4M15,11H19V19H15V11Z"/>
+                        <path fill="#ffffff" d="M19,2H5C3.89,2 3,2.89 3,4V20A2,2 0 0,0 5,22H19A2,2 0 0,0 21,20V4C21,2.89 20.1,2 19,2M11,4H13V9H11V4M11,11H13V19H11V11M5,4H9V9H5V4M5,11H9V19H5V11M15,4H19V9H15V4M15,11H19V19H15V11Z"/>
                     </svg>
                 </div>
-                <h2><?php esc_html_e( 'Create Your Site', 'dynamic-site-maker' ); ?></h2>
-                <p><?php esc_html_e( 'Fill out the form below to generate your custom site.', 'dynamic-site-maker' ); ?></p>
+                <h2><?php echo esc_html($page_title); ?></h2>
+                <p><?php echo esc_html($page_description); ?></p>
             </div>
 
             <!-- Progress Steps -->
@@ -50,17 +128,17 @@ $has_submitted = $spam_protection->has_submitted();
                 <div class="dsmk-progress-steps">
                     <div class="dsmk-progress-step active" data-step="1">
                         <div class="dsmk-step-number">1</div>
-                        <div class="dsmk-step-label"><?php esc_html_e( 'Your Info', 'dynamic-site-maker' ); ?></div>
+                        <div class="dsmk-step-label"><?php echo esc_html($step1_label); ?></div>
                     </div>
                     <div class="dsmk-progress-connector"></div>
                     <div class="dsmk-progress-step" data-step="2">
                         <div class="dsmk-step-number">2</div>
-                        <div class="dsmk-step-label"><?php esc_html_e( 'Logo', 'dynamic-site-maker' ); ?></div>
+                        <div class="dsmk-step-label"><?php echo esc_html($step2_label); ?></div>
                     </div>
                     <div class="dsmk-progress-connector"></div>
                     <div class="dsmk-progress-step" data-step="3">
                         <div class="dsmk-step-number">3</div>
-                        <div class="dsmk-step-label"><?php esc_html_e( 'Links', 'dynamic-site-maker' ); ?></div>
+                        <div class="dsmk-step-label"><?php echo esc_html($step3_label); ?></div>
                     </div>
                 </div>
             </div>
@@ -72,19 +150,14 @@ $has_submitted = $spam_protection->has_submitted();
             <form id="dsmk-form" class="dsmk-form" method="post" enctype="multipart/form-data">
                 <!-- Step 1 - Personal Information -->
                 <div class="dsmk-form-step active" data-step="1">
-                    <h3><?php esc_html_e( 'Your Information', 'dynamic-site-maker' ); ?></h3>
+                    <h3><?php echo esc_html($step1_title); ?></h3>
                     
                     <div class="dsmk-form-field">
                         <label for="dsmk-name" class="dsmk-form-label">
-                            <?php esc_html_e( 'Affiliate Name', 'dynamic-site-maker' ); ?>
+                            <?php echo esc_html($name_label); ?>
                             <span class="dsmk-form-required">*</span>
                         </label>
                         <div class="dsmk-input-wrapper">
-                            <span class="dsmk-input-icon">
-                                <svg viewBox="0 0 24 24" width="18" height="18">
-                                    <path fill="currentColor" d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" />
-                                </svg>
-                            </span>
                             <input type="text" 
                                    id="dsmk-name" 
                                    name="name" 
@@ -108,11 +181,11 @@ $has_submitted = $spam_protection->has_submitted();
                 
                 <!-- Step 2 - Logo Upload -->
                 <div class="dsmk-form-step" data-step="2">
-                    <h3><?php esc_html_e( 'Upload Your Logo', 'dynamic-site-maker' ); ?></h3>
+                    <h3><?php echo esc_html($step2_title); ?></h3>
                     
                     <div class="dsmk-form-field">
                         <label class="dsmk-form-label">
-                            <?php esc_html_e( 'Your Logo', 'dynamic-site-maker' ); ?>
+                            <?php echo esc_html($logo_label); ?>
                             <span class="dsmk-form-required">*</span>
                         </label>
                         
@@ -125,11 +198,6 @@ $has_submitted = $spam_protection->has_submitted();
                                        accept="image/jpeg,image/png,image/svg+xml"
                                        required>
                                 <div class="dsmk-file-upload-content">
-                                    <div class="dsmk-file-upload-icon">
-                                        <svg viewBox="0 0 24 24" width="48" height="48">
-                                            <path fill="currentColor" d="M13,9H18.5L13,3.5V9M6,2H14L20,8V20A2,2 0 0,1 18,22H6C4.89,22 4,21.1 4,20V4C4,2.89 4.89,2 6,2M6,20H15L18,20V12L14,16L12,14L6,20M8,9A2,2 0 0,0 6,11A2,2 0 0,0 8,13A2,2 0 0,0 10,11A2,2 0 0,0 8,9Z" />
-                                        </svg>
-                                    </div>
                                     <div class="dsmk-file-upload-text">
                                         <span class="dsmk-drag-text"><?php esc_html_e( 'Drag & drop your logo here', 'dynamic-site-maker' ); ?></span>
                                         <span class="dsmk-or-text"><?php esc_html_e( 'or', 'dynamic-site-maker' ); ?></span>
@@ -152,8 +220,15 @@ $has_submitted = $spam_protection->has_submitted();
                                 </div>
                             </div>
                             <p class="dsmk-form-description">
-                                <?php esc_html_e( 'Upload your logo (JPG, PNG, SVG - Max 5MB)', 'dynamic-site-maker' ); ?>
+                                <?php esc_html_e( 'Upload your logo (JPG, PNG, SVG - Max 1MB)', 'dynamic-site-maker' ); ?>
                             </p>
+                            <div class="dsmk-logo-size-guide">
+                                <h4><?php esc_html_e( 'Logo Size Guide:', 'dynamic-site-maker' ); ?></h4>
+                                <ul>
+                                    <li><?php esc_html_e( 'Recommended size: 716x138 pixels', 'dynamic-site-maker' ); ?></li>
+                                    <li><?php esc_html_e( 'Upload the logo under 1 MB', 'dynamic-site-maker' ); ?></li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                     
@@ -180,19 +255,14 @@ $has_submitted = $spam_protection->has_submitted();
                 
                 <!-- Step 3 - Affiliate Link -->
                 <div class="dsmk-form-step" data-step="3">
-                    <h3><?php esc_html_e( 'Add Your Links', 'dynamic-site-maker' ); ?></h3>
+                    <h3><?php echo esc_html($step3_title); ?></h3>
                     
                     <div class="dsmk-form-field">
                         <label for="dsmk-affiliate-link" class="dsmk-form-label">
-                            <?php esc_html_e( 'Affiliate Link', 'dynamic-site-maker' ); ?>
+                            <?php echo esc_html($link_label); ?>
                             <span class="dsmk-form-required">*</span>
                         </label>
                         <div class="dsmk-input-wrapper">
-                            <span class="dsmk-input-icon">
-                                <svg viewBox="0 0 24 24" width="18" height="18">
-                                    <path fill="currentColor" d="M3.9,12C3.9,10.29 5.29,8.9 7,8.9H11V7H7A5,5 0 0,0 2,12A5,5 0 0,0 7,17H11V15.1H7C5.29,15.1 3.9,13.71 3.9,12M8,13H16V11H8V13M17,7H13V8.9H17C18.71,8.9 20.1,10.29 20.1,12C20.1,13.71 18.71,15.1 17,15.1H13V17H17A5,5 0 0,0 22,12A5,5 0 0,0 17,7Z" />
-                                </svg>
-                            </span>
                             <input type="url" 
                                    id="dsmk-affiliate-link" 
                                    name="affiliate_link" 

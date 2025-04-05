@@ -352,6 +352,49 @@
     color: #666;
 }
 
+/* Customization Fields */
+.dsmk-step-titles,
+.dsmk-field-labels {
+    margin-bottom: 15px;
+}
+
+.dsmk-step-title,
+.dsmk-field-label {
+    margin-bottom: 10px;
+}
+
+.dsmk-step-title label,
+.dsmk-field-label label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.wp-picker-container {
+    display: inline-block;
+}
+
+.dsmk-customization-container h2 {
+    margin-top: 20px;
+}
+
+/* Fix for Next/Previous Button Icon Alignment */
+.dsmk-button-icon-left,
+.dsmk-button-icon-right {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+}
+
+.dsmk-button-icon-left {
+    margin-right: 5px;
+}
+
+.dsmk-button-icon-right {
+    margin-left: 5px;
+}
+
 /* Help Section */
 .dsmk-help-section {
     margin-bottom: 30px;

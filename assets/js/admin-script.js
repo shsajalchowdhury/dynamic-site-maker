@@ -30,6 +30,9 @@
         
         // Initialize tooltips
         initTooltips();
+        
+        // Initialize delete page confirmation
+        initDeletePageConfirmation();
     }
 
     /**
@@ -275,7 +278,7 @@
      */
     function initColorPicker() {
         if ($.fn.wpColorPicker) {
-            $('.dsmk-color-picker').wpColorPicker();
+            $('.color-picker').wpColorPicker();
         }
     }
 
@@ -297,6 +300,22 @@
             }).on('mouseleave', function() {
                 $tooltip.removeClass('dsmk-tooltip-visible');
             });
+        });
+    }
+
+    /**
+     * Initialize delete page confirmation
+     */
+    function initDeletePageConfirmation() {
+        $('.dsmk-delete-page').on('click', function(e) {
+            e.preventDefault();
+            
+            const $link = $(this);
+            const pageTitle = $link.data('page-title');
+            
+            if (confirm('Are you sure you want to delete "' + pageTitle + '"? This action cannot be undone.')) {
+                window.location.href = $link.attr('href');
+            }
         });
     }
 

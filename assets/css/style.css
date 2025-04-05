@@ -93,6 +93,7 @@
     color: #757575;
     font-weight: 500;
     transition: all 0.3s ease;
+    text-align: center;
 }
 
 .dsmk-progress-step.active .dsmk-step-number {
@@ -389,20 +390,23 @@
 .dsmk-button {
     display: inline-flex;
     align-items: center;
-    padding: 12px 24px;
+    justify-content: center;
+    padding: 12px 20px;
+    border: none;
     border-radius: 6px;
-    font-size: 16px;
-    font-weight: 500;
+    font-size: 15px;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    border: none;
+    outline: none;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     text-decoration: none;
+    color: #ffffff !important;
 }
 
 .dsmk-button-prev {
     background-color: #f5f5f5;
-    color: #333;
+    color: #333333 !important;
 }
 
 .dsmk-button-prev:hover {
@@ -414,7 +418,7 @@
 .dsmk-button-next,
 .dsmk-button-submit {
     background-color: #2196f3;
-    color: white;
+    color: #ffffff !important;
 }
 
 .dsmk-button-next:hover,
@@ -424,16 +428,27 @@
     box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
 }
 
+.dsmk-button-icon-left,
+.dsmk-button-icon-right {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    line-height: 1;
+}
+
 .dsmk-button-icon-left {
     margin-right: 8px;
-    display: flex;
-    align-items: center;
 }
 
 .dsmk-button-icon-right {
     margin-left: 8px;
-    display: flex;
-    align-items: center;
+}
+
+.dsmk-button svg {
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
 }
 
 /* Loading Animation */
@@ -619,6 +634,33 @@
     color: #03a9f4;
 }
 
+/* Logo Size Guide */
+.dsmk-logo-size-guide {
+    margin-top: 15px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    border-left: 4px solid #2196f3;
+}
+
+.dsmk-logo-size-guide h4 {
+    margin: 0 0 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+}
+
+.dsmk-logo-size-guide ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.dsmk-logo-size-guide li {
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #555;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .dsmk-form-container {
@@ -641,10 +683,6 @@
         width: 30px;
         height: 30px;
         font-size: 14px;
-    }
-    
-    .dsmk-step-label {
-        font-size: 12px;
     }
     
     .dsmk-progress-connector {
@@ -750,7 +788,7 @@
     align-items: center;
     justify-content: center;
     background-color: #2196f3;
-    color: #fff;
+    color: #000000;
     font-size: 18px;
     font-weight: 600;
     padding: 15px 30px;

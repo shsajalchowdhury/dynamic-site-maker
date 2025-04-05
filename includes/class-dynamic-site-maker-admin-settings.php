@@ -26,6 +26,9 @@ class DSMK_Admin_Settings {
         
         // Register settings
         add_action( 'admin_init', array( $this, 'register_settings' ) );
+        
+        // Handle page deletion
+        add_action( 'admin_init', array( $this, 'handle_page_deletion' ) );
     }
 
     /**
@@ -133,6 +136,252 @@ class DSMK_Admin_Settings {
             'dsmk_settings',
             'dsmk_general_settings'
         );
+        
+        register_setting(
+            'dsmk_customization_settings',
+            'dsmk_shortcode_page_title',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Shortcode page title', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default'           => 'Created Website',
+            )
+        );
+
+        register_setting(
+            'dsmk_customization_settings',
+            'dsmk_shortcode_page_description',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Shortcode page description', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default'           => 'Fill out the form below to generate your custom site.',
+            )
+        );
+
+        register_setting(
+            'dsmk_customization_settings',
+            'dsmk_shortcode_header_bg_color',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Header background color', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_hex_color',
+                'default'           => '#2196f3',
+            )
+        );
+
+        register_setting(
+            'dsmk_customization_settings',
+            'dsmk_shortcode_button_color',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Button color', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_hex_color',
+                'default'           => '#2196f3',
+            )
+        );
+
+        register_setting(
+            'dsmk_customization_settings',
+            'dsmk_shortcode_text_color',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Text color', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_hex_color',
+                'default'           => '#333333',
+            )
+        );
+
+        register_setting(
+            'dsmk_customization_settings',
+            'dsmk_shortcode_step1_title',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Step 1 title', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default'           => 'Your Information',
+            )
+        );
+
+        register_setting(
+            'dsmk_customization_settings',
+            'dsmk_shortcode_step2_title',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Step 2 title', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default'           => 'Upload Your Logo',
+            )
+        );
+
+        register_setting(
+            'dsmk_customization_settings',
+            'dsmk_shortcode_step3_title',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Step 3 title', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default'           => 'Add Your Links',
+            )
+        );
+
+        register_setting(
+            'dsmk_customization_settings',
+            'dsmk_shortcode_name_label',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Name field label', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default'           => 'Affiliate Name',
+            )
+        );
+
+        register_setting(
+            'dsmk_customization_settings',
+            'dsmk_shortcode_logo_label',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Logo field label', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default'           => 'Your Logo',
+            )
+        );
+
+        register_setting(
+            'dsmk_customization_settings',
+            'dsmk_shortcode_link_label',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Link field label', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default'           => 'Affiliate Link',
+            )
+        );
+
+        register_setting(
+            'dsmk_customization_settings',
+            'dsmk_shortcode_step1_label',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Step 1 label', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default'           => 'Your Info',
+            )
+        );
+
+        register_setting(
+            'dsmk_customization_settings',
+            'dsmk_shortcode_step2_label',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Step 2 label', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default'           => 'Logo',
+            )
+        );
+
+        register_setting(
+            'dsmk_customization_settings',
+            'dsmk_shortcode_step3_label',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Step 3 label', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default'           => 'Links',
+            )
+        );
+
+        add_settings_section(
+            'dsmk_customization_settings_section',
+            __( 'Shortcode Page Customization', 'dynamic-site-maker' ),
+            array( $this, 'display_section_info' ),
+            'dsmk_customization_settings'
+        );
+
+        add_settings_section(
+            'dsmk_customization_colors_section',
+            __( 'Color Settings', 'dynamic-site-maker' ),
+            array( $this, 'display_section_info' ),
+            'dsmk_customization_settings'
+        );
+
+        add_settings_section(
+            'dsmk_customization_fields_section',
+            __( 'Field Labels', 'dynamic-site-maker' ),
+            array( $this, 'display_section_info' ),
+            'dsmk_customization_settings'
+        );
+
+        add_settings_section(
+            'dsmk_customization_steps_section',
+            __( 'Step Labels', 'dynamic-site-maker' ),
+            array( $this, 'display_section_info' ),
+            'dsmk_customization_settings'
+        );
+
+        add_settings_field(
+            'dsmk_shortcode_page_title',
+            __( 'Shortcode Page Title', 'dynamic-site-maker' ),
+            array( $this, 'shortcode_page_title_callback' ),
+            'dsmk_customization_settings',
+            'dsmk_customization_settings_section'
+        );
+
+        add_settings_field(
+            'dsmk_shortcode_page_description',
+            __( 'Shortcode Page Description', 'dynamic-site-maker' ),
+            array( $this, 'shortcode_page_description_callback' ),
+            'dsmk_customization_settings',
+            'dsmk_customization_settings_section'
+        );
+
+        add_settings_field(
+            'dsmk_shortcode_header_bg_color',
+            __( 'Header Background Color', 'dynamic-site-maker' ),
+            array( $this, 'header_bg_color_callback' ),
+            'dsmk_customization_settings',
+            'dsmk_customization_colors_section'
+        );
+
+        add_settings_field(
+            'dsmk_shortcode_button_color',
+            __( 'Button Color', 'dynamic-site-maker' ),
+            array( $this, 'button_color_callback' ),
+            'dsmk_customization_settings',
+            'dsmk_customization_colors_section'
+        );
+
+        add_settings_field(
+            'dsmk_shortcode_text_color',
+            __( 'Text Color', 'dynamic-site-maker' ),
+            array( $this, 'text_color_callback' ),
+            'dsmk_customization_settings',
+            'dsmk_customization_colors_section'
+        );
+
+        add_settings_field(
+            'dsmk_shortcode_step_titles',
+            __( 'Step Titles', 'dynamic-site-maker' ),
+            array( $this, 'step_titles_callback' ),
+            'dsmk_customization_settings',
+            'dsmk_customization_fields_section'
+        );
+
+        add_settings_field(
+            'dsmk_shortcode_field_labels',
+            __( 'Field Labels', 'dynamic-site-maker' ),
+            array( $this, 'field_labels_callback' ),
+            'dsmk_customization_settings',
+            'dsmk_customization_fields_section'
+        );
+
+        add_settings_field(
+            'dsmk_shortcode_step_labels',
+            __( 'Step Labels', 'dynamic-site-maker' ),
+            array( $this, 'step_labels_callback' ),
+            'dsmk_customization_settings',
+            'dsmk_customization_steps_section'
+        );
     }
 
     /**
@@ -182,9 +431,13 @@ class DSMK_Admin_Settings {
                             <span class="dashicons dashicons-admin-settings"></span>
                             <?php esc_html_e( 'Settings', 'dynamic-site-maker' ); ?>
                         </a>
+                        <a href="?page=dynamic-site-maker&tab=customization&_wpnonce=<?php echo esc_attr( wp_create_nonce( 'dsmk_switch_tab' ) ); ?>" class="dsmk-nav-tab <?php echo $current_tab === 'customization' ? 'active' : ''; ?>">
+                            <span class="dashicons dashicons-admin-customizer"></span>
+                            <?php esc_html_e( 'Customization', 'dynamic-site-maker' ); ?>
+                        </a>
                         <a href="?page=dynamic-site-maker&tab=pages&_wpnonce=<?php echo esc_attr( wp_create_nonce( 'dsmk_switch_tab' ) ); ?>" class="dsmk-nav-tab <?php echo $current_tab === 'pages' ? 'active' : ''; ?>">
                             <span class="dashicons dashicons-admin-page"></span>
-                            <?php esc_html_e( 'Landing Pages', 'dynamic-site-maker' ); ?>
+                            <?php esc_html_e( 'Created Website', 'dynamic-site-maker' ); ?>
                         </a>
                         <a href="?page=dynamic-site-maker&tab=help&_wpnonce=<?php echo esc_attr( wp_create_nonce( 'dsmk_switch_tab' ) ); ?>" class="dsmk-nav-tab <?php echo $current_tab === 'help' ? 'active' : ''; ?>">
                             <span class="dashicons dashicons-editor-help"></span>
@@ -202,6 +455,9 @@ class DSMK_Admin_Settings {
                             break;
                         case 'help':
                             $this->display_help_tab();
+                            break;
+                        case 'customization':
+                            $this->display_customization_tab();
                             break;
                         default:
                             $this->display_settings_tab();
@@ -271,7 +527,7 @@ class DSMK_Admin_Settings {
         <div class="dsmk-pages-container">
             <div class="dsmk-card">
                 <div class="dsmk-card-header">
-                    <h2><?php esc_html_e( 'Created Landing Pages', 'dynamic-site-maker' ); ?></h2>
+                    <h2><?php esc_html_e( 'Created Websites', 'dynamic-site-maker' ); ?></h2>
                 </div>
                 <div class="dsmk-card-body">
                     <?php $this->display_created_pages(); ?>
@@ -388,6 +644,20 @@ class DSMK_Admin_Settings {
                             <td>
                                 <a href="<?php echo esc_url( get_edit_post_link() ); ?>"><?php esc_html_e( 'Edit', 'dynamic-site-maker' ); ?></a> |
                                 <a href="<?php the_permalink(); ?>" target="_blank"><?php esc_html_e( 'View', 'dynamic-site-maker' ); ?></a>
+                                <?php
+                                // Add delete action with confirmation
+                                $delete_url = add_query_arg(
+                                    array(
+                                        'page' => 'dynamic-site-maker',
+                                        'tab' => 'pages',
+                                        'action' => 'delete',
+                                        'post_id' => get_the_ID(),
+                                        '_wpnonce' => wp_create_nonce( 'dsmk_delete_page' ),
+                                    ),
+                                    admin_url( 'admin.php' )
+                                );
+                                ?>
+                                | <a href="<?php echo esc_url( $delete_url ); ?>" class="dsmk-delete-page" data-page-title="<?php the_title_attribute(); ?>"><?php esc_html_e( 'Delete', 'dynamic-site-maker' ); ?></a>
                             </td>
                         </tr>
                     <?php endwhile; ?>
@@ -395,7 +665,7 @@ class DSMK_Admin_Settings {
             </table>
             <?php
         } else {
-            echo '<p>' . esc_html__( 'No landing pages have been created yet.', 'dynamic-site-maker' ) . '</p>';
+            echo '<p>' . esc_html__( 'No Websites have been created yet.', 'dynamic-site-maker' ) . '</p>';
         }
 
         wp_reset_postdata();
@@ -410,6 +680,18 @@ class DSMK_Admin_Settings {
         switch ( $args['id'] ) {
             case 'dsmk_general_settings':
                 echo '<p>' . esc_html__( 'Configure general settings for Dynamic Site Maker.', 'dynamic-site-maker' ) . '</p>';
+                break;
+            case 'dsmk_customization_settings_section':
+                echo '<p>' . esc_html__( 'Customize the shortcode page.', 'dynamic-site-maker' ) . '</p>';
+                break;
+            case 'dsmk_customization_colors_section':
+                echo '<p>' . esc_html__( 'Customize the colors of the shortcode page.', 'dynamic-site-maker' ) . '</p>';
+                break;
+            case 'dsmk_customization_fields_section':
+                echo '<p>' . esc_html__( 'Customize the field labels of the shortcode page.', 'dynamic-site-maker' ) . '</p>';
+                break;
+            case 'dsmk_customization_steps_section':
+                echo '<p>' . esc_html__( 'Customize the step labels of the shortcode page.', 'dynamic-site-maker' ) . '</p>';
                 break;
             default:
                 break;
@@ -501,5 +783,199 @@ class DSMK_Admin_Settings {
         wp_reset_postdata();
         
         return $templates;
+    }
+
+    /**
+     * Handle page deletion
+     */
+    public function handle_page_deletion() {
+        // Check if we're on the right page and have the right action
+        if ( ! isset( $_GET['page'] ) || 'dynamic-site-maker' !== $_GET['page'] ) {
+            return;
+        }
+        
+        if ( ! isset( $_GET['action'] ) || 'delete' !== $_GET['action'] ) {
+            return;
+        }
+        
+        if ( ! isset( $_GET['post_id'] ) || ! isset( $_GET['_wpnonce'] ) ) {
+            return;
+        }
+        
+        // Verify nonce
+        if ( ! wp_verify_nonce( sanitize_key( $_GET['_wpnonce'] ), 'dsmk_delete_page' ) ) {
+            wp_die( esc_html__( 'Security check failed. Please try again.', 'dynamic-site-maker' ) );
+        }
+        
+        // Check user capabilities
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'You do not have permission to delete this page.', 'dynamic-site-maker' ) );
+        }
+        
+        $post_id = absint( $_GET['post_id'] );
+        
+        // Check if the post exists and is a landing page
+        $post = get_post( $post_id );
+        if ( ! $post || 'page' !== $post->post_type || ! get_post_meta( $post_id, '_dsmk_name', true ) ) {
+            wp_die( esc_html__( 'The specified website does not exist.', 'dynamic-site-maker' ) );
+        }
+        
+        // Delete the page
+        wp_delete_post( $post_id, true );
+        
+        // Redirect back to the landing pages tab with a success message
+        wp_safe_redirect( add_query_arg( 
+            array(
+                'page' => 'dynamic-site-maker',
+                'tab' => 'pages',
+                'deleted' => '1',
+                '_wpnonce' => wp_create_nonce( 'dsmk_switch_tab' ),
+            ),
+            admin_url( 'admin.php' )
+        ) );
+        exit;
+    }
+
+    /**
+     * Display customization tab
+     */
+    private function display_customization_tab() {
+        ?>
+        <div class="dsmk-customization-container">
+            <div class="dsmk-card">
+                <div class="dsmk-card-header">
+                    <h2><?php esc_html_e( 'Shortcode Page Customization', 'dynamic-site-maker' ); ?></h2>
+                </div>
+                <div class="dsmk-card-body">
+                    <form method="post" action="options.php" class="dsmk-form">
+                        <?php
+                        settings_fields( 'dsmk_customization_settings' );
+                        do_settings_sections( 'dsmk_customization_settings' );
+                        submit_button( __( 'Save Customization', 'dynamic-site-maker' ), 'primary dsmk-button' );
+                        ?>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+    
+    /**
+     * Shortcode page title field callback
+     */
+    public function shortcode_page_title_callback() {
+        ?>
+        <input type="text" id="dsmk_shortcode_page_title" name="dsmk_shortcode_page_title" value="<?php echo esc_attr( get_option( 'dsmk_shortcode_page_title' ) ); ?>" class="regular-text">
+        <p class="description"><?php esc_html_e( 'The title for the shortcode page.', 'dynamic-site-maker' ); ?></p>
+        <?php
+    }
+    
+    /**
+     * Shortcode page description field callback
+     */
+    public function shortcode_page_description_callback() {
+        ?>
+        <textarea id="dsmk_shortcode_page_description" name="dsmk_shortcode_page_description" class="large-text"><?php echo esc_textarea( get_option( 'dsmk_shortcode_page_description' ) ); ?></textarea>
+        <p class="description"><?php esc_html_e( 'The description for the shortcode page.', 'dynamic-site-maker' ); ?></p>
+        <?php
+    }
+    
+    /**
+     * Header background color field callback
+     */
+    public function header_bg_color_callback() {
+        ?>
+        <input type="text" id="dsmk_shortcode_header_bg_color" name="dsmk_shortcode_header_bg_color" value="<?php echo esc_attr( get_option( 'dsmk_shortcode_header_bg_color' ) ); ?>" class="color-picker" data-alpha="true">
+        <p class="description"><?php esc_html_e( 'The background color of the header.', 'dynamic-site-maker' ); ?></p>
+        <?php
+    }
+    
+    /**
+     * Button color field callback
+     */
+    public function button_color_callback() {
+        ?>
+        <input type="text" id="dsmk_shortcode_button_color" name="dsmk_shortcode_button_color" value="<?php echo esc_attr( get_option( 'dsmk_shortcode_button_color' ) ); ?>" class="color-picker" data-alpha="true">
+        <p class="description"><?php esc_html_e( 'The color of the buttons.', 'dynamic-site-maker' ); ?></p>
+        <?php
+    }
+    
+    /**
+     * Text color field callback
+     */
+    public function text_color_callback() {
+        ?>
+        <input type="text" id="dsmk_shortcode_text_color" name="dsmk_shortcode_text_color" value="<?php echo esc_attr( get_option( 'dsmk_shortcode_text_color' ) ); ?>" class="color-picker" data-alpha="true">
+        <p class="description"><?php esc_html_e( 'The color of the text.', 'dynamic-site-maker' ); ?></p>
+        <?php
+    }
+    
+    /**
+     * Step titles field callback
+     */
+    public function step_titles_callback() {
+        ?>
+        <div class="dsmk-step-titles">
+            <div class="dsmk-step-title">
+                <label for="dsmk_shortcode_step1_title"><?php esc_html_e( 'Step 1 Title', 'dynamic-site-maker' ); ?></label>
+                <input type="text" id="dsmk_shortcode_step1_title" name="dsmk_shortcode_step1_title" value="<?php echo esc_attr( get_option( 'dsmk_shortcode_step1_title' ) ); ?>" class="regular-text">
+            </div>
+            <div class="dsmk-step-title">
+                <label for="dsmk_shortcode_step2_title"><?php esc_html_e( 'Step 2 Title', 'dynamic-site-maker' ); ?></label>
+                <input type="text" id="dsmk_shortcode_step2_title" name="dsmk_shortcode_step2_title" value="<?php echo esc_attr( get_option( 'dsmk_shortcode_step2_title' ) ); ?>" class="regular-text">
+            </div>
+            <div class="dsmk-step-title">
+                <label for="dsmk_shortcode_step3_title"><?php esc_html_e( 'Step 3 Title', 'dynamic-site-maker' ); ?></label>
+                <input type="text" id="dsmk_shortcode_step3_title" name="dsmk_shortcode_step3_title" value="<?php echo esc_attr( get_option( 'dsmk_shortcode_step3_title' ) ); ?>" class="regular-text">
+            </div>
+        </div>
+        <p class="description"><?php esc_html_e( 'The titles for each step of the form.', 'dynamic-site-maker' ); ?></p>
+        <?php
+    }
+    
+    /**
+     * Field labels field callback
+     */
+    public function field_labels_callback() {
+        ?>
+        <div class="dsmk-field-labels">
+            <div class="dsmk-field-label">
+                <label for="dsmk_shortcode_name_label"><?php esc_html_e( 'Name Field Label', 'dynamic-site-maker' ); ?></label>
+                <input type="text" id="dsmk_shortcode_name_label" name="dsmk_shortcode_name_label" value="<?php echo esc_attr( get_option( 'dsmk_shortcode_name_label' ) ); ?>" class="regular-text">
+            </div>
+            <div class="dsmk-field-label">
+                <label for="dsmk_shortcode_logo_label"><?php esc_html_e( 'Logo Field Label', 'dynamic-site-maker' ); ?></label>
+                <input type="text" id="dsmk_shortcode_logo_label" name="dsmk_shortcode_logo_label" value="<?php echo esc_attr( get_option( 'dsmk_shortcode_logo_label' ) ); ?>" class="regular-text">
+            </div>
+            <div class="dsmk-field-label">
+                <label for="dsmk_shortcode_link_label"><?php esc_html_e( 'Link Field Label', 'dynamic-site-maker' ); ?></label>
+                <input type="text" id="dsmk_shortcode_link_label" name="dsmk_shortcode_link_label" value="<?php echo esc_attr( get_option( 'dsmk_shortcode_link_label' ) ); ?>" class="regular-text">
+            </div>
+        </div>
+        <p class="description"><?php esc_html_e( 'The labels for each field of the form.', 'dynamic-site-maker' ); ?></p>
+        <?php
+    }
+    
+    /**
+     * Step labels field callback
+     */
+    public function step_labels_callback() {
+        ?>
+        <div class="dsmk-step-labels">
+            <div class="dsmk-step-label">
+                <label for="dsmk_shortcode_step1_label"><?php esc_html_e( 'Step 1 Label', 'dynamic-site-maker' ); ?></label>
+                <input type="text" id="dsmk_shortcode_step1_label" name="dsmk_shortcode_step1_label" value="<?php echo esc_attr( get_option( 'dsmk_shortcode_step1_label' ) ); ?>" class="regular-text">
+            </div>
+            <div class="dsmk-step-label">
+                <label for="dsmk_shortcode_step2_label"><?php esc_html_e( 'Step 2 Label', 'dynamic-site-maker' ); ?></label>
+                <input type="text" id="dsmk_shortcode_step2_label" name="dsmk_shortcode_step2_label" value="<?php echo esc_attr( get_option( 'dsmk_shortcode_step2_label' ) ); ?>" class="regular-text">
+            </div>
+            <div class="dsmk-step-label">
+                <label for="dsmk_shortcode_step3_label"><?php esc_html_e( 'Step 3 Label', 'dynamic-site-maker' ); ?></label>
+                <input type="text" id="dsmk_shortcode_step3_label" name="dsmk_shortcode_step3_label" value="<?php echo esc_attr( get_option( 'dsmk_shortcode_step3_label' ) ); ?>" class="regular-text">
+            </div>
+        </div>
+        <p class="description"><?php esc_html_e( 'The labels for each step of the form.', 'dynamic-site-maker' ); ?></p>
+        <?php
     }
 }
