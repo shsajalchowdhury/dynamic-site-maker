@@ -70,7 +70,7 @@ class DSMK_Landing_Page {
      * @return string Unique slug.
      */
     private function generate_unique_slug( $name ) {
-        $base_slug = sanitize_title( $name . '-landing-page' );
+        $base_slug = sanitize_title( $name );
         $slug = $base_slug;
         $counter = 1;
 

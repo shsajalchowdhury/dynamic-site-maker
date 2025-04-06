@@ -36,6 +36,9 @@ $link_label = get_option('dsmk_shortcode_link_label', 'Affiliate Link');
 $step1_label = get_option('dsmk_shortcode_step1_label', 'Your Info');
 $step2_label = get_option('dsmk_shortcode_step2_label', 'Logo');
 $step3_label = get_option('dsmk_shortcode_step3_label', 'Links');
+$name_placeholder = get_option('dsmk_shortcode_name_placeholder', 'Enter Affiliate Name');
+$email_placeholder = get_option('dsmk_shortcode_email_placeholder', 'Enter Email Address');
+$link_placeholder = get_option('dsmk_shortcode_link_placeholder', 'https://example.com/affiliate');
 
 // Generate custom CSS based on settings
 $custom_css = "
@@ -163,7 +166,7 @@ function adjustBrightness($hex, $steps) {
                                    id="dsmk-name" 
                                    name="name" 
                                    class="dsmk-form-input" 
-                                   placeholder="<?php esc_attr_e( 'Enter Affiliate Name', 'dynamic-site-maker' ); ?>"
+                                   placeholder="<?php echo esc_attr($name_placeholder); ?>"
                                    required>
                         </div>
                     </div>
@@ -178,7 +181,7 @@ function adjustBrightness($hex, $steps) {
                                    id="dsmk-email" 
                                    name="email" 
                                    class="dsmk-form-input" 
-                                   placeholder="<?php esc_attr_e( 'Enter Email Address', 'dynamic-site-maker' ); ?>"
+                                   placeholder="<?php echo esc_attr($email_placeholder); ?>"
                                    required>
                         </div>
                     </div>
@@ -283,7 +286,7 @@ function adjustBrightness($hex, $steps) {
                                    id="dsmk-affiliate-link" 
                                    name="affiliate_link" 
                                    class="dsmk-form-input" 
-                                   placeholder="<?php esc_attr_e( 'https://example.com/affiliate', 'dynamic-site-maker' ); ?>"
+                                   placeholder="<?php echo esc_attr($link_placeholder); ?>"
                                    required>
                         </div>
                         <p class="dsmk-form-description">

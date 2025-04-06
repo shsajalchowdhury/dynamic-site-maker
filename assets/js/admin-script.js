@@ -277,8 +277,20 @@
      * Initialize color picker
      */
     function initColorPicker() {
-        if ($.fn.wpColorPicker) {
-            $('.color-picker').wpColorPicker();
+        // Make sure jQuery and wpColorPicker are available
+        if (typeof jQuery !== 'undefined' && typeof jQuery.fn.wpColorPicker !== 'undefined') {
+            jQuery(document).ready(function($) {
+                $('.color-picker').wpColorPicker();
+            });
+        } else {
+            // Fallback if wpColorPicker is not available immediately
+            jQuery(document).ready(function($) {
+                setTimeout(function() {
+                    if ($.fn.wpColorPicker) {
+                        $('.color-picker').wpColorPicker();
+                    }
+                }, 100);
+            });
         }
     }
 

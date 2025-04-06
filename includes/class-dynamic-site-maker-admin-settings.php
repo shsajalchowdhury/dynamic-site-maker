@@ -302,6 +302,39 @@ class DSMK_Admin_Settings {
             )
         );
 
+        register_setting(
+            'dsmk_customization_settings',
+            'dsmk_shortcode_name_placeholder',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Name field placeholder', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default'           => 'Enter Affiliate Name',
+            )
+        );
+
+        register_setting(
+            'dsmk_customization_settings',
+            'dsmk_shortcode_email_placeholder',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Email field placeholder', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default'           => 'Enter Email Address',
+            )
+        );
+
+        register_setting(
+            'dsmk_customization_settings',
+            'dsmk_shortcode_link_placeholder',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Link field placeholder', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default'           => 'https://example.com/affiliate',
+            )
+        );
+
         add_settings_section(
             'dsmk_customization_settings_section',
             __( 'Shortcode Page Customization', 'dynamic-site-maker' ),
@@ -326,6 +359,13 @@ class DSMK_Admin_Settings {
         add_settings_section(
             'dsmk_customization_steps_section',
             __( 'Step Labels', 'dynamic-site-maker' ),
+            array( $this, 'display_section_info' ),
+            'dsmk_customization_settings'
+        );
+
+        add_settings_section(
+            'dsmk_customization_placeholders_section',
+            __( 'Placeholder Text', 'dynamic-site-maker' ),
             array( $this, 'display_section_info' ),
             'dsmk_customization_settings'
         );
@@ -393,6 +433,30 @@ class DSMK_Admin_Settings {
             'dsmk_customization_settings',
             'dsmk_customization_steps_section'
         );
+
+        add_settings_field(
+            'dsmk_shortcode_name_placeholder',
+            __( 'Name Field Placeholder', 'dynamic-site-maker' ),
+            array( $this, 'name_placeholder_callback' ),
+            'dsmk_customization_settings',
+            'dsmk_customization_placeholders_section'
+        );
+
+        add_settings_field(
+            'dsmk_shortcode_email_placeholder',
+            __( 'Email Field Placeholder', 'dynamic-site-maker' ),
+            array( $this, 'email_placeholder_callback' ),
+            'dsmk_customization_settings',
+            'dsmk_customization_placeholders_section'
+        );
+
+        add_settings_field(
+            'dsmk_shortcode_link_placeholder',
+            __( 'Link Field Placeholder', 'dynamic-site-maker' ),
+            array( $this, 'link_placeholder_callback' ),
+            'dsmk_customization_settings',
+            'dsmk_customization_placeholders_section'
+        );
     }
 
     /**
@@ -423,6 +487,7 @@ class DSMK_Admin_Settings {
             settings_errors();
             
             // Enqueue admin assets after the standard WordPress header
+            wp_enqueue_style( 'wp-color-picker' );
             wp_enqueue_style( 'dsmk-admin-style', DSMK_PLUGIN_URL . 'assets/css/admin-style.css', array(), DSMK_VERSION );
             wp_enqueue_script( 'dsmk-admin-script', DSMK_PLUGIN_URL . 'assets/js/admin-script.js', array( 'jquery', 'jquery-ui-tabs', 'wp-color-picker' ), DSMK_VERSION, true );
             wp_localize_script( 'dsmk-admin-script', 'dsmk_admin', array(
@@ -703,6 +768,9 @@ class DSMK_Admin_Settings {
                 break;
             case 'dsmk_customization_steps_section':
                 echo '<p>' . esc_html__( 'Customize the step labels of the shortcode page.', 'dynamic-site-maker' ) . '</p>';
+                break;
+            case 'dsmk_customization_placeholders_section':
+                echo '<p>' . esc_html__( 'Customize the placeholder text of the shortcode page.', 'dynamic-site-maker' ) . '</p>';
                 break;
             default:
                 break;
@@ -991,6 +1059,36 @@ class DSMK_Admin_Settings {
             </div>
         </div>
         <p class="description"><?php esc_html_e( 'The labels for each step of the form.', 'dynamic-site-maker' ); ?></p>
+        <?php
+    }
+    
+    /**
+     * Name placeholder field callback
+     */
+    public function name_placeholder_callback() {
+        ?>
+        <input type="text" id="dsmk_shortcode_name_placeholder" name="dsmk_shortcode_name_placeholder" value="<?php echo esc_attr( get_option( 'dsmk_shortcode_name_placeholder' ) ); ?>" class="regular-text">
+        <p class="description"><?php esc_html_e( 'The placeholder text for the name field.', 'dynamic-site-maker' ); ?></p>
+        <?php
+    }
+    
+    /**
+     * Email placeholder field callback
+     */
+    public function email_placeholder_callback() {
+        ?>
+        <input type="text" id="dsmk_shortcode_email_placeholder" name="dsmk_shortcode_email_placeholder" value="<?php echo esc_attr( get_option( 'dsmk_shortcode_email_placeholder' ) ); ?>" class="regular-text">
+        <p class="description"><?php esc_html_e( 'The placeholder text for the email field.', 'dynamic-site-maker' ); ?></p>
+        <?php
+    }
+    
+    /**
+     * Link placeholder field callback
+     */
+    public function link_placeholder_callback() {
+        ?>
+        <input type="text" id="dsmk_shortcode_link_placeholder" name="dsmk_shortcode_link_placeholder" value="<?php echo esc_attr( get_option( 'dsmk_shortcode_link_placeholder' ) ); ?>" class="regular-text">
+        <p class="description"><?php esc_html_e( 'The placeholder text for the link field.', 'dynamic-site-maker' ); ?></p>
         <?php
     }
 }
