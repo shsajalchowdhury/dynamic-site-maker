@@ -24,6 +24,9 @@ class DSMK_Form_Handler {
         // Register AJAX handler for form submission
         add_action( 'wp_ajax_dsmk_submit_form', array( $this, 'handle_form_submission' ) );
         add_action( 'wp_ajax_nopriv_dsmk_submit_form', array( $this, 'handle_form_submission' ) );
+        
+        // Register AJAX handler for content updates
+        add_action( 'wp_ajax_dsmk_update_content', array( $this, 'handle_content_update' ) );
     }
 
     /**
@@ -150,6 +153,207 @@ class DSMK_Form_Handler {
             'message' => __( 'Site  created successfully!', 'dynamic-site-maker' ),
             'url'     => get_permalink( $page_id ),
         ) );
+    }
+
+    /**
+     * Handle content update via AJAX
+     */
+    public function handle_content_update() {
+        // Verify nonce
+        if ( ! isset( $_POST['dsmk_update_content_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['dsmk_update_content_nonce'] ) ), 'dsmk_update_content' ) ) {
+            wp_send_json_error( array( 'message' => __( 'Security check failed.', 'dynamic-site-maker' ) ) );
+        }
+
+        // Verify user capabilities (only admins can update content)
+        if ( ! current_user_can( 'edit_pages' ) ) {
+            wp_send_json_error( array( 'message' => __( 'You do not have permission to perform this action.', 'dynamic-site-maker' ) ) );
+        }
+
+        // Get post ID
+        if ( empty( $_POST['post_id'] ) ) {
+            wp_send_json_error( array( 'message' => __( 'Invalid page ID.', 'dynamic-site-maker' ) ) );
+        }
+        $post_id = intval( $_POST['post_id'] );
+
+        // Verify post exists and is a landing page
+        if ( ! get_post_meta( $post_id, '_dsmk_name', true ) ) {
+            wp_send_json_error( array( 'message' => __( 'This is not a valid Dynamic Site Maker landing page.', 'dynamic-site-maker' ) ) );
+        }
+
+        $changes_made = false;
+
+        // Handle affiliate link update
+        if ( ! empty( $_POST['affiliate_link'] ) ) {
+            $affiliate_link = esc_url_raw( wp_unslash( $_POST['affiliate_link'] ) );
+            
+            // Update the affiliate link in post meta
+            update_post_meta( $post_id, '_dsmk_affiliate_link', $affiliate_link );
+            
+            // Update the link in the Elementor content
+            $this->update_elementor_content( $post_id, 'affiliate_link', $affiliate_link );
+            
+            $changes_made = true;
+        }
+
+        // Handle logo update
+        if ( ! empty( $_FILES['logo']['name'] ) ) {
+            // Check file type
+            $file_type = wp_check_filetype( $_FILES['logo']['name'] );
+            if ( ! in_array( $file_type['ext'], array( 'jpg', 'jpeg', 'png', 'gif', 'webp' ), true ) ) {
+                wp_send_json_error( array( 'message' => __( 'Invalid file type. Please upload an image file.', 'dynamic-site-maker' ) ) );
+            }
+
+            // Upload the file
+            $upload = wp_handle_upload( $_FILES['logo'], array( 'test_form' => false ) );
+            
+            if ( isset( $upload['error'] ) ) {
+                wp_send_json_error( array( 'message' => $upload['error'] ) );
+            }
+
+            if ( isset( $upload['file'] ) ) {
+                // Create attachment
+                $attachment = array(
+                    'post_mime_type' => $upload['type'],
+                    'post_title'     => sanitize_file_name( $_FILES['logo']['name'] ),
+                    'post_content'   => '',
+                    'post_status'    => 'inherit',
+                );
+
+                $attachment_id = wp_insert_attachment( $attachment, $upload['file'], $post_id );
+
+                if ( ! is_wp_error( $attachment_id ) ) {
+                    // Generate attachment metadata
+                    require_once ABSPATH . 'wp-admin/includes/image.php';
+                    $attachment_data = wp_generate_attachment_metadata( $attachment_id, $upload['file'] );
+                    wp_update_attachment_metadata( $attachment_id, $attachment_data );
+
+                    // Update the logo attachment ID in post meta
+                    update_post_meta( $post_id, '_dsmk_logo_id', $attachment_id );
+                    
+                    // Update the logo in the Elementor content
+                    $this->update_elementor_content( $post_id, 'logo', $attachment_id );
+                    
+                    $changes_made = true;
+                } else {
+                    wp_send_json_error( array( 'message' => $attachment_id->get_error_message() ) );
+                }
+            }
+        }
+
+        if ( $changes_made ) {
+            wp_send_json_success( array( 'message' => __( 'Content updated successfully.', 'dynamic-site-maker' ) ) );
+        } else {
+            wp_send_json_error( array( 'message' => __( 'No changes were made.', 'dynamic-site-maker' ) ) );
+        }
+    }
+
+    /**
+     * Update Elementor content with new values
+     *
+     * @param int    $post_id Post ID.
+     * @param string $type    Type of content to update ('logo' or 'affiliate_link').
+     * @param mixed  $value   New value (attachment ID for logo, URL for affiliate link).
+     */
+    private function update_elementor_content( $post_id, $type, $value ) {
+        // Get Elementor data
+        $elementor_data = get_post_meta( $post_id, '_elementor_data', true );
+        
+        if ( empty( $elementor_data ) ) {
+            error_log('Dynamic Site Maker: No Elementor data found for post ID ' . $post_id);
+            return;
+        }
+        
+        // Decode JSON data
+        $elementor_data = json_decode( $elementor_data, true );
+        
+        if ( json_last_error() !== JSON_ERROR_NONE ) {
+            error_log('Dynamic Site Maker: Error decoding Elementor data for post ID ' . $post_id . ': ' . json_last_error_msg());
+            return;
+        }
+        
+        // Process the data recursively
+        $updated_data = $this->process_elementor_elements( $elementor_data, $type, $value );
+        
+        // Save updated data
+        update_post_meta( $post_id, '_elementor_data', wp_slash( json_encode( $updated_data ) ) );
+        
+        // Clear Elementor cache
+        if ( class_exists( '\Elementor\Plugin' ) ) {
+            \Elementor\Plugin::$instance->files_manager->clear_cache();
+        }
+        
+        error_log('Dynamic Site Maker: Updated Elementor content for post ID ' . $post_id . ' with ' . $type);
+    }
+
+    /**
+     * Process Elementor elements recursively
+     *
+     * @param array  $elements Elements to process.
+     * @param string $type     Type of content to update ('logo' or 'affiliate_link').
+     * @param mixed  $value    New value (attachment ID for logo, URL for affiliate link).
+     * @return array Updated elements.
+     */
+    private function process_elementor_elements( $elements, $type, $value ) {
+        foreach ( $elements as &$element ) {
+            // Process this element
+            if ( isset( $element['settings'] ) ) {
+                // Check for logo
+                if ( $type === 'logo' ) {
+                    // Check if this is an image widget
+                    if ( isset( $element['widgetType'] ) && $element['widgetType'] === 'image' ) {
+                        // Check if this image has the dsmk-logo class
+                        if ( isset( $element['settings']['_css_classes'] ) && strpos( $element['settings']['_css_classes'], 'dsmk-logo' ) !== false ) {
+                            // Update the image
+                            $element['settings']['image']['id'] = $value;
+                            $element['settings']['image']['url'] = wp_get_attachment_url( $value );
+                            error_log('Dynamic Site Maker: Updated logo image with ID ' . $value);
+                        }
+                    }
+                }
+                
+                // Check for affiliate link
+                if ( $type === 'affiliate_link' ) {
+                    // Check for buttons
+                    if ( isset( $element['widgetType'] ) && $element['widgetType'] === 'button' ) {
+                        // Check if this button has the dsmk-affiliate class
+                        if ( isset( $element['settings']['_css_classes'] ) && strpos( $element['settings']['_css_classes'], 'dsmk-affiliate' ) !== false ) {
+                            // Update the button link
+                            if ( isset( $element['settings']['link'] ) && is_array( $element['settings']['link'] ) ) {
+                                $element['settings']['link']['url'] = $value;
+                                error_log('Dynamic Site Maker: Updated button link to ' . $value);
+                            }
+                        }
+                    }
+                    
+                    // Check for any element with a link containing the placeholder
+                    if ( isset( $element['settings']['link'] ) && is_array( $element['settings']['link'] ) ) {
+                        if ( isset( $element['settings']['link']['url'] ) && strpos( $element['settings']['link']['url'], '{{affiliate_link}}' ) !== false ) {
+                            $element['settings']['link']['url'] = $value;
+                            error_log('Dynamic Site Maker: Updated link with placeholder to ' . $value);
+                        }
+                    }
+                    
+                    // Additional check for href attribute in HTML widgets
+                    if ( isset( $element['widgetType'] ) && $element['widgetType'] === 'html' && isset( $element['settings']['html'] ) ) {
+                        $html = $element['settings']['html'];
+                        if ( strpos( $html, 'dsmk-affiliate' ) !== false ) {
+                            // Replace href in HTML
+                            $pattern = '/(href=[\'"]).+?([\'"])/i';
+                            $replacement = '$1' . $value . '$2';
+                            $element['settings']['html'] = preg_replace( $pattern, $replacement, $html );
+                            error_log('Dynamic Site Maker: Updated HTML widget with affiliate link');
+                        }
+                    }
+                }
+            }
+            
+            // Process child elements recursively
+            if ( isset( $element['elements'] ) && is_array( $element['elements'] ) ) {
+                $element['elements'] = $this->process_elementor_elements( $element['elements'], $type, $value );
+            }
+        }
+        
+        return $elements;
     }
 
     /**

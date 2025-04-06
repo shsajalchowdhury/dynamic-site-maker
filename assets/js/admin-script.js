@@ -33,6 +33,9 @@
         
         // Initialize delete page confirmation
         initDeletePageConfirmation();
+        
+        // Initialize update content functionality
+        initUpdateContent();
     }
 
     /**
@@ -328,6 +331,93 @@
             if (confirm('Are you sure you want to delete "' + pageTitle + '"? This action cannot be undone.')) {
                 window.location.href = $link.attr('href');
             }
+        });
+    }
+
+    /**
+     * Initialize update content functionality
+     */
+    function initUpdateContent() {
+        // Handle "Update Content" button click
+        $('.dsmk-update-content').on('click', function(e) {
+            e.preventDefault();
+            
+            // Get data from data attributes
+            const postId = $(this).data('post-id');
+            const name = $(this).data('name');
+            const email = $(this).data('email');
+            const link = $(this).data('link');
+            
+            // Populate the form fields
+            $('#dsmk-update-post-id').val(postId);
+            $('#dsmk-update-name').val(name);
+            $('#dsmk-update-email').val(email);
+            $('#dsmk-update-affiliate-link').val(link);
+            
+            // Show the modal
+            $('#dsmk-update-content-modal').css('display', 'block');
+        });
+        
+        // Handle modal close button
+        $('.dsmk-modal-close, .dsmk-modal-cancel').on('click', function() {
+            $('#dsmk-update-content-modal').css('display', 'none');
+        });
+        
+        // Close modal when clicking outside of it
+        $(window).on('click', function(e) {
+            if ($(e.target).is('.dsmk-modal')) {
+                $('#dsmk-update-content-modal').css('display', 'none');
+            }
+        });
+        
+        // Handle form submission
+        $('#dsmk-update-content-form').on('submit', function(e) {
+            e.preventDefault();
+            
+            // Create FormData object to handle file uploads
+            const formData = new FormData(this);
+            formData.append('action', 'dsmk_update_content');
+            
+            // Show loading state
+            const $submitButton = $(this).find('button[type="submit"]');
+            const originalButtonText = $submitButton.text();
+            $submitButton.text('Updating...').prop('disabled', true);
+            
+            // Send AJAX request
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        // Show success message
+                        showNotice(response.data.message, 'success');
+                        
+                        // Close the modal
+                        $('#dsmk-update-content-modal').css('display', 'none');
+                        
+                        // Reload the page after a short delay to show updated content
+                        setTimeout(function() {
+                            location.reload();
+                        }, 3000); // Increased delay to ensure notice is visible
+                    } else {
+                        // Show error message
+                        showNotice(response.data.message, 'error');
+                        
+                        // Reset button state
+                        $submitButton.text(originalButtonText).prop('disabled', false);
+                    }
+                },
+                error: function() {
+                    // Show generic error message
+                    showNotice('An error occurred while updating content.', 'error');
+                    
+                    // Reset button state
+                    $submitButton.text(originalButtonText).prop('disabled', false);
+                }
+            });
         });
     }
 

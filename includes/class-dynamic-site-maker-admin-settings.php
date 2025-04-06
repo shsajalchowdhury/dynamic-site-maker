@@ -610,6 +610,65 @@ class DSMK_Admin_Settings {
                 </div>
             </div>
         </div>
+
+        <!-- Update Content Modal -->
+        <div id="dsmk-update-content-modal" class="dsmk-modal">
+            <div class="dsmk-modal-content">
+                <span class="dsmk-modal-close">&times;</span>
+                <h2><?php esc_html_e( 'Update Page Content', 'dynamic-site-maker' ); ?></h2>
+                
+                <form id="dsmk-update-content-form" method="post" enctype="multipart/form-data">
+                    <?php wp_nonce_field( 'dsmk_update_content', 'dsmk_update_content_nonce' ); ?>
+                    <input type="hidden" id="dsmk-update-post-id" name="post_id" value="">
+                    
+                    <div class="dsmk-form-field">
+                        <label for="dsmk-update-name" class="dsmk-form-label">
+                            <?php esc_html_e( 'Name', 'dynamic-site-maker' ); ?>
+                        </label>
+                        <div class="dsmk-input-wrapper">
+                            <input type="text" id="dsmk-update-name" name="name" class="dsmk-form-input" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="dsmk-form-field">
+                        <label for="dsmk-update-email" class="dsmk-form-label">
+                            <?php esc_html_e( 'Email', 'dynamic-site-maker' ); ?>
+                        </label>
+                        <div class="dsmk-input-wrapper">
+                            <input type="email" id="dsmk-update-email" name="email" class="dsmk-form-input" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="dsmk-form-field">
+                        <label for="dsmk-update-logo" class="dsmk-form-label">
+                            <?php esc_html_e( 'Update Logo', 'dynamic-site-maker' ); ?>
+                        </label>
+                        <div class="dsmk-input-wrapper">
+                            <input type="file" id="dsmk-update-logo" name="logo" class="dsmk-form-input" accept="image/*">
+                            <p class="description"><?php esc_html_e( 'Upload a new logo to replace the existing one. Leave empty to keep the current logo.', 'dynamic-site-maker' ); ?></p>
+                        </div>
+                    </div>
+                    
+                    <div class="dsmk-form-field">
+                        <label for="dsmk-update-affiliate-link" class="dsmk-form-label">
+                            <?php esc_html_e( 'Affiliate Link', 'dynamic-site-maker' ); ?>
+                        </label>
+                        <div class="dsmk-input-wrapper">
+                            <input type="url" id="dsmk-update-affiliate-link" name="affiliate_link" class="dsmk-form-input">
+                        </div>
+                    </div>
+                    
+                    <div class="dsmk-form-actions">
+                        <button type="submit" class="dsmk-button dsmk-button-primary">
+                            <?php esc_html_e( 'Update', 'dynamic-site-maker' ); ?>
+                        </button>
+                        <button type="button" class="dsmk-button dsmk-button-secondary dsmk-modal-cancel">
+                            <?php esc_html_e( 'Cancel', 'dynamic-site-maker' ); ?>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
         <?php
     }
 
@@ -705,6 +764,7 @@ class DSMK_Admin_Settings {
                     <tr>
                         <th><?php esc_html_e( 'Page Title', 'dynamic-site-maker' ); ?></th>
                         <th><?php esc_html_e( 'Submitter Name', 'dynamic-site-maker' ); ?></th>
+                        <th><?php esc_html_e( 'Email', 'dynamic-site-maker' ); ?></th>
                         <th><?php esc_html_e( 'Date Created', 'dynamic-site-maker' ); ?></th>
                         <th><?php esc_html_e( 'Actions', 'dynamic-site-maker' ); ?></th>
                     </tr>
@@ -716,10 +776,12 @@ class DSMK_Admin_Settings {
                                 <a href="<?php the_permalink(); ?>" target="_blank"><?php the_title(); ?></a>
                             </td>
                             <td><?php echo esc_html( get_post_meta( get_the_ID(), '_dsmk_name', true ) ); ?></td>
+                            <td><?php echo esc_html( get_post_meta( get_the_ID(), '_dsmk_email', true ) ); ?></td>
                             <td><?php echo esc_html( get_the_date() ); ?></td>
                             <td>
                                 <a href="<?php echo esc_url( get_edit_post_link() ); ?>"><?php esc_html_e( 'Edit', 'dynamic-site-maker' ); ?></a> |
-                                <a href="<?php the_permalink(); ?>" target="_blank"><?php esc_html_e( 'View', 'dynamic-site-maker' ); ?></a>
+                                <a href="<?php the_permalink(); ?>" target="_blank"><?php esc_html_e( 'View', 'dynamic-site-maker' ); ?></a> |
+                                <a href="#" class="dsmk-update-content" data-post-id="<?php echo esc_attr( get_the_ID() ); ?>" data-name="<?php echo esc_attr( get_post_meta( get_the_ID(), '_dsmk_name', true ) ); ?>" data-email="<?php echo esc_attr( get_post_meta( get_the_ID(), '_dsmk_email', true ) ); ?>" data-link="<?php echo esc_attr( get_post_meta( get_the_ID(), '_dsmk_affiliate_link', true ) ); ?>"><?php esc_html_e( 'Update Content', 'dynamic-site-maker' ); ?></a>
                                 <?php
                                 // Add delete action with confirmation
                                 $delete_url = add_query_arg(

@@ -486,3 +486,75 @@
 .dsmk-content {
     animation: dsmk-fadeIn 0.3s ease-out;
 }
+
+/* Delete Confirmation */
+.dsmk-delete-confirm {
+    color: #d63638;
+    font-weight: 500;
+}
+
+/* Modal Styles */
+.dsmk-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.dsmk-modal-content {
+    position: relative;
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 30px;
+    border-radius: 5px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    width: 80%;
+    max-width: 600px;
+    animation: dsmkModalFadeIn 0.3s;
+}
+
+@keyframes dsmkModalFadeIn {
+    from {opacity: 0; transform: translateY(-20px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+
+.dsmk-modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    color: #aaa;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.dsmk-modal-close:hover,
+.dsmk-modal-close:focus {
+    color: #333;
+    text-decoration: none;
+}
+
+.dsmk-modal h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #1e88e5;
+    border-bottom: 1px solid #e2e4e7;
+    padding-bottom: 15px;
+}
+
+.dsmk-modal .dsmk-form-actions {
+    margin-top: 30px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.dsmk-modal .dsmk-form-field {
+    margin-bottom: 20px;
+}
