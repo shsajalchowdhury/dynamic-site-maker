@@ -1,11 +1,9 @@
 <?php
 /**
  * Plugin Name: Dynamic Site Maker
- * Plugin URI: https://easywptools.com/dynamic-site-maker
  * Description: Dynamically generates landing pages using submitted form data and a pre-designed Elementor template.
  * Version: 1.0.0
- * Author: SH Sajal Chowdhury
- * Author URI: https://easywptools.com
+ * Author: Push Profit
  * Text Domain: dynamic-site-maker
  * Domain Path: /languages
  * License: GPL-2.0+
@@ -97,8 +95,49 @@ function dsmk_init() {
     
     // Load text domain
     load_plugin_textdomain( 'dynamic-site-maker', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+    
+    // Register shortcodes
+    add_shortcode( 'dynamic_site_maker', 'dsmk_shortcode' );
+    add_shortcode( 'dynamic_site_maker_edit', 'dsmk_edit_shortcode' );
+    add_shortcode( 'dsmk_form', 'dsmk_form_shortcode' );
 }
 add_action( 'plugins_loaded', 'dsmk_init' );
+
+/**
+ * Shortcode callback for the main form
+ *
+ * @return string Shortcode output
+ */
+function dsmk_shortcode() {
+    // Start output buffering
+    ob_start();
+    
+    // Include form template
+    include_once DSMK_PLUGIN_DIR . 'templates/form-template.php';
+    
+    // Get the buffered content
+    $output = ob_get_clean();
+    
+    return $output;
+}
+
+/**
+ * Shortcode callback for the edit form
+ *
+ * @return string Shortcode output
+ */
+function dsmk_edit_shortcode() {
+    // Start output buffering
+    ob_start();
+    
+    // Include edit form template
+    include_once DSMK_PLUGIN_DIR . 'templates/edit-form-template.php';
+    
+    // Get the buffered content
+    $output = ob_get_clean();
+    
+    return $output;
+}
 
 /**
  * Register shortcode for displaying the form.
@@ -108,7 +147,6 @@ function dsmk_form_shortcode() {
     include_once DSMK_PLUGIN_DIR . 'templates/form-template.php';
     return ob_get_clean();
 }
-add_shortcode( 'dsmk_form', 'dsmk_form_shortcode' );
 
 /**
  * Enqueue scripts and styles.
@@ -123,10 +161,17 @@ function dsmk_enqueue_scripts() {
     // Add our Elementor widget styles
     wp_enqueue_style( 'dsmk-elementor-widgets', DSMK_PLUGIN_URL . 'assets/css/elementor-widgets.css', array(), DSMK_VERSION );
     
-    // Localize script
+    // Localize script for both regular and edit forms
     wp_localize_script( 'dsmk-script', 'dsmk_ajax', array(
         'ajax_url'      => admin_url( 'admin-ajax.php' ),
         'nonce'         => wp_create_nonce( 'dsmk_form_nonce' ),
+    ) );
+    
+    // Add form-specific variables
+    wp_localize_script( 'dsmk-script', 'dsmk_form', array(
+        'ajax_url'       => admin_url( 'admin-ajax.php' ),
+        'nonce'          => wp_create_nonce( 'dsmk_form_nonce' ),
+        'redirect_delay' => absint( get_option( 'dsmk_redirect_delay', 2 ) ),
     ) );
 }
 add_action( 'wp_enqueue_scripts', 'dsmk_enqueue_scripts' );

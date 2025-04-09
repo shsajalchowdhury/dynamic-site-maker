@@ -38,10 +38,17 @@ class DSMK_Form_Handler {
             wp_send_json_error( array( 'message' => __( 'Security check failed.', 'dynamic-site-maker' ) ) );
         }
 
-        // Check if user has already submitted the form
-        $spam_protection = new DSMK_Spam_Protection();
-        if ( $spam_protection->has_submitted() ) {
-            wp_send_json_error( array( 'message' => __( 'You have already submitted a form. Only one submission is allowed per session.', 'dynamic-site-maker' ) ) );
+        // Check if this is an edit mode submission
+        $is_edit_mode = isset( $_POST['edit_mode'] ) && $_POST['edit_mode'] === 'true';
+        $existing_page_id = isset( $_POST['page_id'] ) ? absint( $_POST['page_id'] ) : 0;
+
+        // Only check for spam protection on new submissions, not edits
+        if ( !$is_edit_mode ) {
+            // Check if user has already submitted the form
+            $spam_protection = new DSMK_Spam_Protection();
+            if ( $spam_protection->has_submitted() ) {
+                wp_send_json_error( array( 'message' => __( 'You have already submitted a form. Only one submission is allowed per session.', 'dynamic-site-maker' ) ) );
+            }
         }
 
         // Validate name
@@ -130,29 +137,51 @@ class DSMK_Form_Handler {
             wp_send_json_error( array( 'message' => __( 'Logo is required.', 'dynamic-site-maker' ) ) );
         }
 
-        // Create a new landing page
-        $landing_page = new DSMK_Landing_Page();
-        $page_id = $landing_page->create_page(
-            array(
-                'name'           => $name,
-                'email'          => $email,
-                'logo_id'        => $logo_id,
-                'affiliate_link' => $affiliate_link,
-            )
-        );
-
-        if ( is_wp_error( $page_id ) ) {
-            wp_send_json_error( array( 'message' => $page_id->get_error_message() ) );
+        // Check if we're editing an existing page or creating a new one
+        if ( $is_edit_mode && $existing_page_id > 0 ) {
+            // Update existing page
+            update_post_meta( $existing_page_id, '_dsmk_name', $name );
+            update_post_meta( $existing_page_id, '_dsmk_email', $email );
+            update_post_meta( $existing_page_id, '_dsmk_logo_id', $logo_id );
+            update_post_meta( $existing_page_id, '_dsmk_affiliate_link', $affiliate_link );
+            
+            // Update Elementor content if needed
+            $this->update_elementor_content( $existing_page_id, 'logo', $logo_id );
+            $this->update_elementor_content( $existing_page_id, 'affiliate_link', $affiliate_link );
+            
+            // Get the URL of the updated page
+            $page_url = get_permalink( $existing_page_id );
+            
+            // Return success response
+            wp_send_json_success( array(
+                'message' => __( 'Site updated successfully!', 'dynamic-site-maker' ),
+                'redirect' => $page_url,
+                'page_id' => $existing_page_id,
+                'is_update' => true,
+            ) );
+        } else {
+            // Create new landing page
+            $landing_page = new DSMK_Landing_Page();
+            $page_id = $landing_page->create_page( $name, $email, $logo_id, $affiliate_link );
+            
+            if ( ! $page_id ) {
+                wp_send_json_error( array( 'message' => __( 'Failed to create landing page.', 'dynamic-site-maker' ) ) );
+            }
+            
+            // Mark as submitted to prevent multiple submissions
+            $spam_protection->mark_as_submitted();
+            
+            // Get the URL of the created page
+            $page_url = get_permalink( $page_id );
+            
+            // Return success response
+            wp_send_json_success( array(
+                'message' => __( 'Landing page created successfully!', 'dynamic-site-maker' ),
+                'redirect' => $page_url,
+                'page_id' => $page_id,
+                'is_update' => false,
+            ) );
         }
-
-        // Mark user as having submitted the form
-        $spam_protection->mark_as_submitted();
-
-        // Return success with the URL of the new page
-        wp_send_json_success( array(
-            'message' => __( 'Site  created successfully!', 'dynamic-site-maker' ),
-            'url'     => get_permalink( $page_id ),
-        ) );
     }
 
     /**
@@ -354,6 +383,34 @@ class DSMK_Form_Handler {
         }
         
         return $elements;
+    }
+
+    /**
+     * Find existing page by email
+     *
+     * @param string $email Email address to search for
+     * @return int|false Page ID if found, false otherwise
+     */
+    public function find_page_by_email($email) {
+        $args = array(
+            'post_type'      => 'page',
+            'posts_per_page' => 1,
+            'meta_query'     => array(
+                array(
+                    'key'     => '_dsmk_email',
+                    'value'   => $email,
+                    'compare' => '=',
+                ),
+            ),
+        );
+        
+        $query = new WP_Query($args);
+        
+        if ($query->have_posts()) {
+            return $query->posts[0]->ID;
+        }
+        
+        return false;
     }
 
     /**
