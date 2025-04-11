@@ -6,9 +6,38 @@
 (function($) {
     'use strict';
 
+    /**
+     * Update username placeholders in affiliate links
+     * 
+     * @param {string} username The username to display in placeholders
+     */
+    function updateUsernamePlaceholders(username) {
+        $('.dsmk-username-placeholder').text(username || '');
+    }
+
     // Initialize the form handler when the document is ready
     $(document).ready(function() {
         initForm();
+        initFileUpload();
+        initUsernameGeneration();
+        
+        // Initialize username placeholders with current username value
+        const initialUsername = $('#dsmk-username').val();
+        if (initialUsername) {
+            updateUsernamePlaceholders(initialUsername);
+        }
+        
+        // Update username placeholders when username field changes
+        $('#dsmk-username').on('input change', function() {
+            updateUsernamePlaceholders($(this).val());
+        });
+        
+        // Update hidden affiliate link field when a radio button is selected
+        $('input[name="affiliate_link"]').on('change', function() {
+            const username = $('#dsmk-username').val();
+            const baseUrl = $(this).val();
+            $('#dsmk-affiliate-link').val(baseUrl + username);
+        });
     });
 
     /**
@@ -58,6 +87,11 @@
             const prevStep = $(this).data('prev');
             goToStep(prevStep);
         });
+        
+        // Username generation button handler
+        $('#dsmk-generate-username').on('click', function() {
+            generateUsername();
+        });
     }
 
     /**
@@ -92,7 +126,7 @@
         $('.dsmk-progress-connector').removeClass('active');
         
         // Mark steps as active or completed
-        for (let i = 1; i <= 3; i++) {
+        for (let i = 1; i <= 4; i++) {
             const $step = $(`.dsmk-progress-step[data-step="${i}"]`);
             
             if (i < currentStep) {
@@ -240,45 +274,104 @@
         const $step = $(`.dsmk-form-step[data-step="${step}"]`);
         let isValid = true;
         
+        // Clear previous error messages
+        $('.dsmk-form__messages').empty();
+        
         // Check required fields in this step
         $step.find('[required]').each(function() {
             const $field = $(this);
             
             if (!$field.val()) {
                 highlightField($field);
+                showMessage($('.dsmk-form__messages'), 'Please fill in all required fields.', 'error');
                 isValid = false;
             } else {
                 unhighlightField($field);
             }
         });
         
-        // If step 1 (name), validate name format
+        // If step 1 (name and email), validate format
         if (step === 1) {
             const $nameField = $step.find('#dsmk-name');
-            if ($nameField.val() && $nameField.val().length < 2) {
-                highlightField($nameField);
-                showMessage($('.dsmk-form__messages'), 'Please enter a valid name (at least 2 characters).', 'error');
-                isValid = false;
+            const $emailField = $step.find('#dsmk-email');
+            
+            // Always validate name format regardless of whether it's required
+            if ($nameField.val()) {
+                // Check if name contains only alphanumeric characters and spaces
+                const nameRegex = /^[a-zA-Z0-9\s]+$/;
+                if (!nameRegex.test($nameField.val())) {
+                    highlightField($nameField);
+                    showMessage($('.dsmk-form__messages'), 'Please enter a valid name (only letters, numbers, and spaces allowed).', 'error');
+                    isValid = false;
+                } else if ($nameField.val().length < 2) {
+                    highlightField($nameField);
+                    showMessage($('.dsmk-form__messages'), 'Please enter a valid name (at least 2 characters).', 'error');
+                    isValid = false;
+                }
+            }
+            
+            // Always validate email format regardless of whether it's required
+            if ($emailField.val()) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test($emailField.val())) {
+                    highlightField($emailField);
+                    showMessage($('.dsmk-form__messages'), 'Please enter a valid email address.', 'error');
+                    isValid = false;
+                }
             }
         }
         
-        // If step 2 (logo), validate file is selected
+        // If step 2 (logo), validate file if one is selected (optional)
         if (step === 2) {
             const $fileInput = $step.find('.dsmk-file-input');
-            if ($fileInput.prop('required') && !$fileInput[0].files.length) {
-                highlightField($fileInput.closest('.dsmk-file-upload-area'));
-                showMessage($('.dsmk-form__messages'), 'Please upload your logo.', 'error');
-                isValid = false;
+            if ($fileInput[0].files.length > 0) {
+                // Validate file type and size if a file is selected
+                const file = $fileInput[0].files[0];
+                const validTypes = ['image/jpeg', 'image/png', 'image/svg+xml'];
+                const maxSize = 1024 * 1024; // 1MB
+                
+                if (!validTypes.includes(file.type)) {
+                    highlightField($fileInput.closest('.dsmk-file-upload-area'));
+                    showMessage($('.dsmk-form__messages'), 'Please upload a valid image file (JPG, PNG, or SVG).', 'error');
+                    isValid = false;
+                } else if (file.size > maxSize) {
+                    highlightField($fileInput.closest('.dsmk-file-upload-area'));
+                    showMessage($('.dsmk-form__messages'), 'File size exceeds 1MB. Please upload a smaller file.', 'error');
+                    isValid = false;
+                }
+            }
+            // Logo is now optional, so we don't need to validate if it's empty
+        }
+        
+        // If step 3 (username), validate username format
+        if (step === 3) {
+            const $usernameField = $step.find('#dsmk-username');
+            if ($usernameField.val()) {
+                // Check if username contains only alphanumeric characters, underscores, and hyphens
+                const usernameRegex = /^[a-zA-Z0-9_-]+$/;
+                if (!usernameRegex.test($usernameField.val())) {
+                    highlightField($usernameField);
+                    showMessage($('.dsmk-form__messages'), 'Please enter a valid username (only letters, numbers, underscores, and hyphens allowed).', 'error');
+                    isValid = false;
+                } else if ($usernameField.val().length < 2) {
+                    highlightField($usernameField);
+                    showMessage($('.dsmk-form__messages'), 'Please enter a valid username (at least 2 characters).', 'error');
+                    isValid = false;
+                }
             }
         }
         
-        // If step 3 (affiliate link), validate URL format
-        if (step === 3) {
-            const $urlField = $step.find('#dsmk-affiliate-link');
-            if ($urlField.val() && !isValidUrl($urlField.val())) {
-                highlightField($urlField);
-                showMessage($('.dsmk-form__messages'), 'Please enter a valid URL for the affiliate link.', 'error');
+        // If step 4 (affiliate link), validate radio selection
+        if (step === 4) {
+            const $radioSelected = $step.find('input[name="affiliate_link"]:checked');
+            if (!$radioSelected.length) {
+                showMessage($('.dsmk-form__messages'), 'Please select an affiliate link option.', 'error');
                 isValid = false;
+            } else {
+                // Make sure the hidden field has the full URL with username
+                const username = $('#dsmk-username').val();
+                const baseUrl = $radioSelected.val();
+                $('#dsmk-affiliate-link').val(baseUrl + username);
             }
         }
         
@@ -319,36 +412,12 @@
     function validateForm($form) {
         let isValid = true;
         
-        // Check all required fields
-        $form.find('[required]').each(function() {
-            const $field = $(this);
-            
-            if (!$field.val()) {
-                if ($field.is('input[type="file"]')) {
-                    highlightField($field.closest('.dsmk-file-upload-area'));
-                } else {
-                    highlightField($field);
-                }
+        // Validate each step
+        for (let i = 1; i <= 4; i++) {
+            if (!validateStep(i)) {
                 isValid = false;
-            } else {
-                unhighlightField($field);
+                break;
             }
-        });
-        
-        // Validate name format
-        const $nameField = $form.find('#dsmk-name');
-        if ($nameField.val() && $nameField.val().length < 2) {
-            highlightField($nameField);
-            showMessage($('.dsmk-form__messages'), 'Please enter a valid name (at least 2 characters).', 'error');
-            isValid = false;
-        }
-        
-        // Validate URL format
-        const $urlField = $form.find('#dsmk-affiliate-link');
-        if ($urlField.val() && !isValidUrl($urlField.val())) {
-            highlightField($urlField);
-            showMessage($('.dsmk-form__messages'), 'Please enter a valid URL for the affiliate link.', 'error');
-            isValid = false;
         }
         
         // Show general error message if form is invalid
@@ -410,6 +479,11 @@
         // Add AJAX action and nonce
         formData.append('action', 'dsmk_submit_form');
         formData.append('nonce', dsmk_ajax.nonce);
+        
+        // Ensure username is included
+        if (!formData.has('username')) {
+            formData.append('username', $('#dsmk-username').val());
+        }
 
         // Send AJAX request
         $.ajax({
@@ -449,23 +523,24 @@
             $('.dsmk-form-loading').hide();
             $('.dsmk-form-success').show();
             
-            // Start progress bar animation
-            const $progressBar = $('.dsmk-redirect-bar');
-            const redirectDelay = parseInt(response.data.redirectDelay, 10) || 2;
-            const incrementInterval = 20;
-            const totalSteps = (redirectDelay * 1000) / incrementInterval;
-            let currentStep = 0;
-            
-            const progressInterval = setInterval(function() {
-                currentStep++;
-                const progressPercentage = (currentStep / totalSteps) * 100;
-                $progressBar.css('width', progressPercentage + '%');
+            // Set up the Visit Site button with the correct URL
+            const $visitButton = $('#dsmk-visit-site');
+            if (response.data.url) {
+                $visitButton.attr('href', response.data.url);
                 
-                if (currentStep >= totalSteps) {
-                    clearInterval(progressInterval);
-                    window.location.href = response.data.url;
-                }
-            }, incrementInterval);
+                // Scroll to the success message
+                $('html, body').animate({
+                    scrollTop: $('.dsmk-form-success').offset().top - 50
+                }, 300);
+                
+                // Add a subtle highlight effect to the button to draw attention
+                setTimeout(function() {
+                    $visitButton.addClass('dsmk-button-highlight');
+                    setTimeout(function() {
+                        $visitButton.removeClass('dsmk-button-highlight');
+                    }, 1500);
+                }, 500);
+            }
         } else {
             // Hide loading overlay
             $('.dsmk-form-loading').hide();
@@ -506,6 +581,111 @@
         `);
     }
 
+    /**
+     * Generate a username based on the name or a random string
+     */
+    function generateUsername() {
+        const $usernameField = $('#dsmk-username');
+        const $nameField = $('#dsmk-name');
+        const $emailField = $('#dsmk-email');
+        const $messageContainer = $('.dsmk-form__messages');
+        const $generateButton = $('#dsmk-generate-username');
+        
+        // Clear previous messages
+        $messageContainer.empty();
+        
+        // Check if name and email are filled
+        if (!$nameField.val().trim() || !$emailField.val().trim()) {
+            showMessage(
+                $messageContainer,
+                'Please fill in your name and email before generating a username.',
+                'warning'
+            );
+            return;
+        }
+        
+        // Show loading indicator
+        $usernameField.attr('disabled', true);
+        $generateButton.attr('disabled', true).text('Generating...');
+        
+        // Get current username or generate a suggested one
+        let suggestedUsername = $usernameField.val().trim();
+        
+        // If no username is entered, create a basic one from the name
+        // This is just a fallback - the server will generate a better one
+        if (!suggestedUsername) {
+            const name = $nameField.val().trim();
+            suggestedUsername = name.toLowerCase()
+                .replace(/[^a-z0-9]/g, '')
+                .substring(0, 12);
+            
+            if (suggestedUsername.length < 3) {
+                suggestedUsername = 'user' + Math.floor(Math.random() * 1000);
+            }
+        }
+        
+        // Make AJAX call to generate username via API
+        $.ajax({
+            url: dsmk_ajax.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'dsmk_generate_username',
+                nonce: dsmk_ajax.nonce,
+                username: suggestedUsername,
+                name: $nameField.val().trim(),
+                email: $emailField.val().trim()
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Clear the field first to ensure the change event triggers
+                    $usernameField.val('');
+                    
+                    // Set the generated username with a slight delay to ensure UI updates
+                    setTimeout(function() {
+                        $usernameField.val(response.data.username);
+                        $usernameField.trigger('change'); // Trigger change event to update any listeners
+                        
+                        // Highlight the username field to draw attention to it
+                        $usernameField.addClass('dsmk-field-highlight');
+                        setTimeout(function() {
+                            $usernameField.removeClass('dsmk-field-highlight');
+                        }, 1500);
+                        
+                        // Update username placeholders in affiliate links
+                        updateUsernamePlaceholders(response.data.username);
+                        
+                        // Show success message
+                        showMessage(
+                            $messageContainer,
+                            response.data.message || 'Username generated! You can edit it if you prefer a different one.',
+                            'success'
+                        );
+                    }, 100);
+                } else {
+                    // Show error message
+                    showMessage(
+                        $messageContainer,
+                        response.data.message || 'Failed to generate username. Please try again.',
+                        'error'
+                    );
+                }
+            },
+            error: function() {
+                // Show error message
+                showMessage(
+                    $messageContainer,
+                    'An error occurred while generating the username. Please try again.',
+                    'error'
+                );
+            },
+            complete: function() {
+                // Reset button state
+                $('#dsmk-generate-username').attr('disabled', false).text('Generate Username');
+                $usernameField.attr('disabled', false).focus();
+            }
+        });
+    }
+    
     /**
      * Get SVG icon path based on message type
      * 

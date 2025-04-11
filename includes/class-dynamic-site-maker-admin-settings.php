@@ -29,6 +29,9 @@ class DSMK_Admin_Settings {
         
         // Handle page deletion
         add_action( 'admin_init', array( $this, 'handle_page_deletion' ) );
+        
+        // Handle Explodely API testing
+        add_action( 'wp_ajax_dsmk_test_explodely_api', array( $this, 'test_explodely_api' ) );
     }
 
     /**
@@ -156,6 +159,52 @@ class DSMK_Admin_Settings {
                 'description'       => __( 'Shortcode page description', 'dynamic-site-maker' ),
                 'sanitize_callback' => 'sanitize_text_field',
                 'default'           => 'Fill out the form below to generate your custom site.',
+            )
+        );
+        
+        // Explodely API Settings
+        add_settings_section(
+            'dsmk_explodely_api_settings',
+            __( 'Explodely API Settings', 'dynamic-site-maker' ),
+            array( $this, 'explodely_api_section_callback' ),
+            'dsmk_settings'
+        );
+        
+        add_settings_field(
+            'dsmk_explodely_username',
+            __( 'Explodely Username', 'dynamic-site-maker' ),
+            array( $this, 'explodely_username_callback' ),
+            'dsmk_settings',
+            'dsmk_explodely_api_settings'
+        );
+        
+        add_settings_field(
+            'dsmk_explodely_api_key',
+            __( 'Explodely API Key', 'dynamic-site-maker' ),
+            array( $this, 'explodely_api_key_callback' ),
+            'dsmk_settings',
+            'dsmk_explodely_api_settings'
+        );
+        
+        register_setting(
+            'dsmk_settings',
+            'dsmk_explodely_username',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Explodely Username', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default'           => '',
+            )
+        );
+        
+        register_setting(
+            'dsmk_settings',
+            'dsmk_explodely_api_key',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Explodely API Key', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default'           => '',
             )
         );
 
@@ -924,6 +973,125 @@ class DSMK_Admin_Settings {
         wp_reset_postdata();
         
         return $templates;
+    }
+
+    /**
+     * Explodely API section callback
+     */
+    public function explodely_api_section_callback() {
+        echo '<p>' . esc_html__( 'Configure your Explodely API credentials for username generation.', 'dynamic-site-maker' ) . '</p>';
+    }
+
+    /**
+     * Explodely username field callback
+     */
+    public function explodely_username_callback() {
+        ?>
+        <input type="text" id="dsmk_explodely_username" name="dsmk_explodely_username" value="<?php echo esc_attr( get_option( 'dsmk_explodely_username' ) ); ?>" class="regular-text">
+        <p class="description"><?php esc_html_e( 'Enter your Explodely account username.', 'dynamic-site-maker' ); ?></p>
+        <?php
+    }
+
+    /**
+     * Explodely API key field callback
+     */
+    public function explodely_api_key_callback() {
+        ?>
+        <input type="text" id="dsmk_explodely_api_key" name="dsmk_explodely_api_key" value="<?php echo esc_attr( get_option( 'dsmk_explodely_api_key' ) ); ?>" class="regular-text">
+        <p class="description"><?php esc_html_e( 'Enter your Explodely API key.', 'dynamic-site-maker' ); ?></p>
+        <button type="button" id="dsmk-test-explodely-api" class="button button-secondary"><?php esc_html_e( 'Test API Connection', 'dynamic-site-maker' ); ?></button>
+        <span id="dsmk-api-test-result" style="margin-left: 10px; display: none;"></span>
+        <script>
+            jQuery(document).ready(function($) {
+                $('#dsmk-test-explodely-api').on('click', function() {
+                    const username = $('#dsmk_explodely_username').val();
+                    const apiKey = $('#dsmk_explodely_api_key').val();
+                    
+                    if (!username || !apiKey) {
+                        $('#dsmk-api-test-result').text('Please enter both username and API key.').css('color', 'red').show();
+                        return;
+                    }
+                    
+                    $(this).prop('disabled', true).text('Testing...');
+                    $('#dsmk-api-test-result').hide();
+                    
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'dsmk_test_explodely_api',
+                            nonce: '<?php echo wp_create_nonce( 'dsmk_test_explodely_api' ); ?>',
+                            username: username,
+                            api_key: apiKey
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                $('#dsmk-api-test-result').text('Connection successful!').css('color', 'green').show();
+                            } else {
+                                $('#dsmk-api-test-result').text(response.data.message || 'Connection failed.').css('color', 'red').show();
+                            }
+                        },
+                        error: function() {
+                            $('#dsmk-api-test-result').text('Connection failed. Please try again.').css('color', 'red').show();
+                        },
+                        complete: function() {
+                            $('#dsmk-test-explodely-api').prop('disabled', false).text('Test API Connection');
+                        }
+                    });
+                });
+            });
+        </script>
+        <?php
+    }
+    
+    /**
+     * Test Explodely API connection
+     */
+    public function test_explodely_api() {
+        // Verify nonce
+        if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'dsmk_test_explodely_api' ) ) {
+            wp_send_json_error( array( 'message' => __( 'Security check failed.', 'dynamic-site-maker' ) ) );
+        }
+        
+        // Get username and API key
+        $username = isset( $_POST['username'] ) ? sanitize_text_field( wp_unslash( $_POST['username'] ) ) : '';
+        $api_key = isset( $_POST['api_key'] ) ? sanitize_text_field( wp_unslash( $_POST['api_key'] ) ) : '';
+        
+        if ( empty( $username ) || empty( $api_key ) ) {
+            wp_send_json_error( array( 'message' => __( 'Username and API key are required.', 'dynamic-site-maker' ) ) );
+        }
+        
+        // Test API connection by trying to create a test user
+        $test_data = array(
+            'username' => $username,
+            'apikey' => $api_key,
+            'apiaction' => 'createuser',
+            'affusername' => 'test_' . uniqid(),
+            'userpass' => wp_generate_password(),
+            'fname' => 'Test',
+            'lname' => 'User',
+            'email' => 'test_' . uniqid() . '@example.com',
+            'ipadd' => $_SERVER['REMOTE_ADDR']
+        );
+        
+        $response = wp_remote_post( 'https://explodely.com/api/v1/aff', array(
+            'body' => $test_data,
+            'timeout' => 30,
+        ) );
+        
+        if ( is_wp_error( $response ) ) {
+            wp_send_json_error( array( 'message' => $response->get_error_message() ) );
+        }
+        
+        $body = wp_remote_retrieve_body( $response );
+        $data = json_decode( $body, true );
+        
+        if ( isset( $data['error'] ) && $data['error'] === 'invalidapikey' ) {
+            wp_send_json_error( array( 'message' => __( 'Invalid API credentials. Please check your username and API key.', 'dynamic-site-maker' ) ) );
+        }
+        
+        // If we got a response (even if it's an error like username_exists), the API connection is working
+        wp_send_json_success( array( 'message' => __( 'API connection successful!', 'dynamic-site-maker' ) ) );
     }
 
     /**

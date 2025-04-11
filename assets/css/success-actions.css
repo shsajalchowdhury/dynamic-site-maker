@@ -1,0 +1,67 @@
+/**
+ * Success Actions Styles
+ */
+
+/* Success Message */
+.dsmk-form-success {
+    text-align: center;
+    padding: 40px 30px;
+    display: none;
+}
+
+.dsmk-success-icon {
+    margin-bottom: 20px;
+    color: #4caf50;
+}
+
+.dsmk-form-success h3 {
+    font-size: 24px;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.dsmk-form-success p {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 25px;
+}
+
+/* Success Actions */
+.dsmk-success-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+@media (min-width: 480px) {
+    .dsmk-success-actions {
+        flex-direction: row;
+        justify-content: center;
+    }
+}
+
+/* Button Highlight Effect */
+@keyframes buttonPulse {
+    0% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(33, 150, 243, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0); }
+}
+
+.dsmk-button-highlight {
+    animation: buttonPulse 1.5s ease-out;
+    transform: scale(1.05);
+    transition: transform 0.3s ease;
+}
+
+/* Primary Button */
+.dsmk-button-primary {
+    background-color: #2196f3;
+    color: #fff !important;
+    border-color: #1976d2;
+}
+
+.dsmk-button-primary:hover {
+    background-color: #1976d2;
+}

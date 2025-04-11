@@ -154,6 +154,8 @@ function dsmk_form_shortcode() {
 function dsmk_enqueue_scripts() {
     // Enqueue CSS
     wp_enqueue_style( 'dsmk-style', DSMK_PLUGIN_URL . 'assets/css/style.css', array(), DSMK_VERSION );
+    wp_enqueue_style( 'dsmk-affiliate-links', DSMK_PLUGIN_URL . 'assets/css/affiliate-links.css', array('dsmk-style'), DSMK_VERSION );
+    wp_enqueue_style( 'dsmk-success-actions', DSMK_PLUGIN_URL . 'assets/css/success-actions.css', array('dsmk-style'), DSMK_VERSION );
     
     // Enqueue JS
     wp_enqueue_script( 'dsmk-script', DSMK_PLUGIN_URL . 'assets/js/dynamic-site-maker-form-handler.js', array( 'jquery' ), DSMK_VERSION, true );

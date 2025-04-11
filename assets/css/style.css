@@ -54,11 +54,11 @@
     border-bottom: 1px solid #eaeaea;
 }
 
-.dsmk-progress-steps {
+.dsmk-progress-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    max-width: 600px;
+    max-width: 700px;
     margin: 0 auto;
 }
 
@@ -116,10 +116,12 @@
     height: 3px;
     background-color: #e0e0e0;
     flex-grow: 1;
-    margin: 0 10px;
+    margin: 0 5px;
     position: relative;
     top: -22px;
     z-index: 0;
+    width: 100%;
+    max-width: 80px;
 }
 
 .dsmk-progress-connector.active {
@@ -161,6 +163,20 @@
 /* Form Fields */
 .dsmk-form-field {
     margin-bottom: 25px;
+}
+
+/* Username field highlight effect */
+@keyframes highlightField {
+    0% { background-color: #ffffff; }
+    30% { background-color: #e3f2fd; }
+    70% { background-color: #e3f2fd; }
+    100% { background-color: #ffffff; }
+}
+
+.dsmk-field-highlight {
+    animation: highlightField 1.5s ease-in-out;
+    border-color: #2196F3 !important;
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.3) !important;
 }
 
 .dsmk-form-label {

@@ -129,7 +129,7 @@ function adjustBrightness($hex, $steps) {
 
             <!-- Progress Steps -->
             <div class="dsmk-form-progress">
-                <div class="dsmk-progress-steps">
+                <div class="dsmk-progress-bar">
                     <div class="dsmk-progress-step active" data-step="1">
                         <div class="dsmk-step-number">1</div>
                         <div class="dsmk-step-label"><?php echo esc_html($step1_label); ?></div>
@@ -142,6 +142,11 @@ function adjustBrightness($hex, $steps) {
                     <div class="dsmk-progress-connector"></div>
                     <div class="dsmk-progress-step" data-step="3">
                         <div class="dsmk-step-number">3</div>
+                        <div class="dsmk-step-label"><?php esc_html_e( 'Username', 'dynamic-site-maker' ); ?></div>
+                    </div>
+                    <div class="dsmk-progress-connector"></div>
+                    <div class="dsmk-progress-step" data-step="4">
+                        <div class="dsmk-step-number">4</div>
                         <div class="dsmk-step-label"><?php echo esc_html($step3_label); ?></div>
                     </div>
                 </div>
@@ -167,8 +172,13 @@ function adjustBrightness($hex, $steps) {
                                    name="name" 
                                    class="dsmk-form-input" 
                                    placeholder="<?php echo esc_attr($name_placeholder); ?>"
+                                   pattern="[a-zA-Z0-9\s]+"
+                                   title="<?php esc_attr_e('Only letters, numbers, and spaces are allowed', 'dynamic-site-maker'); ?>"
                                    required>
                         </div>
+                        <p class="dsmk-form-description">
+                            <?php esc_html_e( 'Only alphanumeric characters and spaces are allowed.', 'dynamic-site-maker' ); ?>
+                        </p>
                     </div>
                     
                     <div class="dsmk-form-field">
@@ -205,17 +215,25 @@ function adjustBrightness($hex, $steps) {
                     <div class="dsmk-form-field">
                         <label class="dsmk-form-label">
                             <?php echo esc_html($logo_label); ?>
-                            <span class="dsmk-form-required">*</span>
                         </label>
                         
                         <div class="dsmk-file-upload">
+                            <div class="dsmk-notice dsmk-notice--info" style="margin-bottom: 15px;">
+                                <div class="dsmk-notice-icon">
+                                    <svg viewBox="0 0 24 24" width="24" height="24">
+                                        <path fill="currentColor" d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M13,7H11V9H13V7M13,11H11V17H13V11Z" />
+                                    </svg>
+                                </div>
+                                <div class="dsmk-notice-content">
+                                    <p><?php esc_html_e( 'You can upload your own logo or use our default logo if you prefer.', 'dynamic-site-maker' ); ?></p>
+                                </div>
+                            </div>
                             <div class="dsmk-file-upload-area" id="dsmk-file-drop-area">
                                 <input type="file" 
                                        id="dsmk-logo" 
                                        name="logo" 
                                        class="dsmk-file-input" 
-                                       accept="image/jpeg,image/png,image/svg+xml"
-                                       required>
+                                       accept="image/jpeg,image/png,image/svg+xml">
                                 <div class="dsmk-file-upload-content">
                                     <div class="dsmk-file-upload-text">
                                         <span class="dsmk-drag-text"><?php esc_html_e( 'Drag & drop your logo here', 'dynamic-site-maker' ); ?></span>
@@ -246,6 +264,7 @@ function adjustBrightness($hex, $steps) {
                                 <ul>
                                     <li><?php esc_html_e( 'Recommended size: 716x138 pixels', 'dynamic-site-maker' ); ?></li>
                                     <li><?php esc_html_e( 'Upload a logo image (maximum size: 1MB)', 'dynamic-site-maker' ); ?></li>
+                                    <li><?php esc_html_e( 'Leave empty to use our default logo', 'dynamic-site-maker' ); ?></li>
                                 </ul>
                             </div>
                         </div>
@@ -272,25 +291,133 @@ function adjustBrightness($hex, $steps) {
                     </div>
                 </div>
                 
-                <!-- Step 3 - Affiliate Link -->
+                <!-- Step 3 - Username -->
                 <div class="dsmk-form-step" data-step="3">
-                    <h3><?php echo esc_html($step3_title); ?></h3>
+                    <h3><?php esc_html_e( 'Set Up Your Explodely Affiliate Account', 'dynamic-site-maker' ); ?></h3>
                     
                     <div class="dsmk-form-field">
-                        <label for="dsmk-affiliate-link" class="dsmk-form-label">
-                            <?php echo esc_html($link_label); ?>
+                        <label for="dsmk-username" class="dsmk-form-label">
+                            <?php esc_html_e( 'Desired Username', 'dynamic-site-maker' ); ?>
                             <span class="dsmk-form-required">*</span>
                         </label>
                         <div class="dsmk-input-wrapper">
-                            <input type="url" 
-                                   id="dsmk-affiliate-link" 
-                                   name="affiliate_link" 
+                            <input type="text" 
+                                   id="dsmk-username" 
+                                   name="username" 
                                    class="dsmk-form-input" 
-                                   placeholder="<?php echo esc_attr($link_placeholder); ?>"
+                                   placeholder="<?php esc_attr_e( 'Enter your desired username', 'dynamic-site-maker' ); ?>"
+                                   pattern="[a-zA-Z0-9_-]+"
+                                   title="<?php esc_attr_e('Only letters, numbers, underscores, and hyphens are allowed', 'dynamic-site-maker'); ?>"
                                    required>
+                            <button type="button" id="dsmk-generate-username" class="dsmk-button dsmk-button-secondary" style="margin-top: 10px;">
+                                <?php esc_html_e( 'Generate Username', 'dynamic-site-maker' ); ?>
+                            </button>
                         </div>
                         <p class="dsmk-form-description">
-                            <?php esc_html_e( 'This link will be used in your site.', 'dynamic-site-maker' ); ?>
+                            <?php esc_html_e( 'Enter your desired Explodely username or click Generate Username to create one automatically.', 'dynamic-site-maker' ); ?>
+                        </p>
+                        <div class="dsmk-notice dsmk-notice--info" style="margin-top: 15px;">
+                            <div class="dsmk-notice-icon">
+                                <svg viewBox="0 0 24 24" width="24" height="24">
+                                    <path fill="currentColor" d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M13,7H11V9H13V7M13,11H11V17H13V11Z" />
+                                </svg>
+                            </div>
+                            <div class="dsmk-notice-content">
+                                <p><?php esc_html_e( 'If your desired username is not available, a similar one will be generated for you.', 'dynamic-site-maker' ); ?></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="dsmk-form-actions">
+                        <button type="button" class="dsmk-button dsmk-button-prev" data-prev="2">
+                            <span class="dsmk-button-icon-left">
+                                <svg viewBox="0 0 24 24" width="16" height="16">
+                                    <path fill="currentColor" d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z" />
+                                </svg>
+                            </span>
+                            <?php esc_html_e( 'Previous', 'dynamic-site-maker' ); ?>
+                        </button>
+                        
+                        <button type="button" class="dsmk-button dsmk-button-next" data-next="4">
+                            <?php esc_html_e( 'Next Step', 'dynamic-site-maker' ); ?>
+                            <span class="dsmk-button-icon-right">
+                                <svg viewBox="0 0 24 24" width="16" height="16">
+                                    <path fill="currentColor" d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" />
+                                </svg>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Step 4 - Affiliate Link -->
+                <div class="dsmk-form-step" data-step="4">
+                    <h3><?php echo esc_html($step3_title); ?></h3>
+                    
+                    <div class="dsmk-form-field">
+                        <label class="dsmk-form-label">
+                            <?php echo esc_html($link_label); ?>
+                            <span class="dsmk-form-required">*</span>
+                        </label>
+                        
+                        <div class="dsmk-affiliate-links-wrapper">
+                            <div class="dsmk-notice dsmk-notice--info" style="margin-bottom: 15px;">
+                                <div class="dsmk-notice-icon">
+                                    <svg viewBox="0 0 24 24" width="24" height="24">
+                                        <path fill="currentColor" d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M13,7H11V9H13V7M13,11H11V17H13V11Z" />
+                                    </svg>
+                                </div>
+                                <div class="dsmk-notice-content">
+                                    <p><?php esc_html_e( 'Select one of the following affiliate links. Your username will be automatically added to the link.', 'dynamic-site-maker' ); ?></p>
+                                </div>
+                            </div>
+                            
+                            <div class="dsmk-affiliate-links-list">
+                                <div class="dsmk-affiliate-link-option">
+                                    <input type="radio" id="dsmk-link-option-1" name="affiliate_link" value="https://explodely.com/p/814557804?affiliate=" class="dsmk-affiliate-link-radio" required>
+                                    <label for="dsmk-link-option-1" class="dsmk-affiliate-link-label">
+                                        <span class="dsmk-affiliate-link-price">$97</span>
+                                        <span class="dsmk-affiliate-link-url">https://explodely.com/p/814557804?affiliate=<span class="dsmk-username-placeholder"></span></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="dsmk-affiliate-link-option">
+                                    <input type="radio" id="dsmk-link-option-2" name="affiliate_link" value="https://explodely.com/p/1858795045?affiliate=" class="dsmk-affiliate-link-radio">
+                                    <label for="dsmk-link-option-2" class="dsmk-affiliate-link-label">
+                                        <span class="dsmk-affiliate-link-price">$57</span>
+                                        <span class="dsmk-affiliate-link-url">https://explodely.com/p/1858795045?affiliate=<span class="dsmk-username-placeholder"></span></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="dsmk-affiliate-link-option">
+                                    <input type="radio" id="dsmk-link-option-3" name="affiliate_link" value="https://explodely.com/p/298281289?affiliate=" class="dsmk-affiliate-link-radio">
+                                    <label for="dsmk-link-option-3" class="dsmk-affiliate-link-label">
+                                        <span class="dsmk-affiliate-link-price">$67</span>
+                                        <span class="dsmk-affiliate-link-url">https://explodely.com/p/298281289?affiliate=<span class="dsmk-username-placeholder"></span></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="dsmk-affiliate-link-option">
+                                    <input type="radio" id="dsmk-link-option-4" name="affiliate_link" value="https://explodely.com/p/1233593608?affiliate=" class="dsmk-affiliate-link-radio">
+                                    <label for="dsmk-link-option-4" class="dsmk-affiliate-link-label">
+                                        <span class="dsmk-affiliate-link-price">$47</span>
+                                        <span class="dsmk-affiliate-link-url">https://explodely.com/p/1233593608?affiliate=<span class="dsmk-username-placeholder"></span></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="dsmk-affiliate-link-option">
+                                    <input type="radio" id="dsmk-link-option-5" name="affiliate_link" value="https://explodely.com/p/798534830?affiliate=" class="dsmk-affiliate-link-radio">
+                                    <label for="dsmk-link-option-5" class="dsmk-affiliate-link-label">
+                                        <span class="dsmk-affiliate-link-price">$37</span>
+                                        <span class="dsmk-affiliate-link-url">https://explodely.com/p/798534830?affiliate=<span class="dsmk-username-placeholder"></span></span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <input type="hidden" id="dsmk-affiliate-link" name="full_affiliate_link" value="">
+                        </div>
+                        
+                        <p class="dsmk-form-description">
+                            <?php esc_html_e( 'The selected link will be used in your landing page.', 'dynamic-site-maker' ); ?>
                         </p>
                     </div>
                     
@@ -334,9 +461,19 @@ function adjustBrightness($hex, $steps) {
                     </svg>
                 </div>
                 <h3><?php echo esc_html( get_option( 'dsmk_form_success_message', __( 'Site created successfully!', 'dynamic-site-maker' ) ) ); ?></h3>
-                <p><?php esc_html_e( 'Redirecting you to your new site...', 'dynamic-site-maker' ); ?></p>
-                <div class="dsmk-redirect-progress">
-                    <div class="dsmk-redirect-bar"></div>
+                <p><?php esc_html_e( 'Your new affiliate site is ready to use!', 'dynamic-site-maker' ); ?></p>
+                <div class="dsmk-success-actions">
+                    <a href="#" id="dsmk-visit-site" class="dsmk-button dsmk-button-primary" target="_blank">
+                        <span class="dsmk-button-icon-left">
+                            <svg viewBox="0 0 24 24" width="16" height="16">
+                                <path fill="currentColor" d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z" />
+                            </svg>
+                        </span>
+                        <?php esc_html_e( 'Visit Your New Site', 'dynamic-site-maker' ); ?>
+                    </a>
+                    <a href="<?php echo esc_url( remove_query_arg( array( 'dsmk-form' ) ) ); ?>" class="dsmk-button dsmk-button-secondary">
+                        <?php esc_html_e( 'Create Another Site', 'dynamic-site-maker' ); ?>
+                    </a>
                 </div>
             </div>
         </div>
