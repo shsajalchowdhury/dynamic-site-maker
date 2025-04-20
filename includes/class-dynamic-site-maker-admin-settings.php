@@ -207,6 +207,44 @@ class DSMK_Admin_Settings {
                 'default'           => '',
             )
         );
+        
+        register_setting(
+            'dsmk_settings',
+            'dsmk_explodely_ip_address',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Explodely IP Address', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default'           => '',
+            )
+        );
+        
+        add_settings_field(
+            'dsmk_explodely_ip_address',
+            __( 'Explodely IP Address', 'dynamic-site-maker' ),
+            array( $this, 'explodely_ip_address_callback' ),
+            'dsmk_settings',
+            'dsmk_explodely_api_settings'
+        );
+        
+        register_setting(
+            'dsmk_settings',
+            'dsmk_explodely_whitelisted_ips',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Whitelisted IPs', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default'           => '',
+            )
+        );
+        
+        add_settings_field(
+            'dsmk_explodely_whitelisted_ips',
+            __( 'Whitelisted IPs', 'dynamic-site-maker' ),
+            array( $this, 'explodely_whitelisted_ips_callback' ),
+            'dsmk_settings',
+            'dsmk_explodely_api_settings'
+        );
 
         register_setting(
             'dsmk_customization_settings',
@@ -1008,11 +1046,11 @@ class DSMK_Admin_Settings {
                     const apiKey = $('#dsmk_explodely_api_key').val();
                     
                     if (!username || !apiKey) {
-                        $('#dsmk-api-test-result').text('Please enter both username and API key.').css('color', 'red').show();
+                        $('#dsmk-api-test-result').text('<?php _e( 'Please enter both username and API key.', 'dynamic-site-maker' ); ?>').css('color', 'red').show();
                         return;
                     }
                     
-                    $(this).prop('disabled', true).text('Testing...');
+                    $(this).prop('disabled', true).text('<?php _e( 'Testing...', 'dynamic-site-maker' ); ?>');
                     $('#dsmk-api-test-result').hide();
                     
                     $.ajax({
@@ -1026,16 +1064,16 @@ class DSMK_Admin_Settings {
                         },
                         success: function(response) {
                             if (response.success) {
-                                $('#dsmk-api-test-result').text('Connection successful!').css('color', 'green').show();
+                                $('#dsmk-api-test-result').text(response.data.message).css('color', 'green').show();
                             } else {
-                                $('#dsmk-api-test-result').text(response.data.message || 'Connection failed.').css('color', 'red').show();
+                                $('#dsmk-api-test-result').text(response.data.message || '<?php _e( 'Connection failed.', 'dynamic-site-maker' ); ?>').css('color', 'red').show();
                             }
                         },
                         error: function() {
-                            $('#dsmk-api-test-result').text('Connection failed. Please try again.').css('color', 'red').show();
+                            $('#dsmk-api-test-result').text('<?php _e( 'Connection error. Please try again.', 'dynamic-site-maker' ); ?>').css('color', 'red').show();
                         },
                         complete: function() {
-                            $('#dsmk-test-explodely-api').prop('disabled', false).text('Test API Connection');
+                            $('#dsmk-test-explodely-api').prop('disabled', false).text('<?php _e( 'Test API Connection', 'dynamic-site-maker' ); ?>');
                         }
                     });
                 });
@@ -1044,6 +1082,26 @@ class DSMK_Admin_Settings {
         <?php
     }
     
+    /**
+     * Explodely IP address field callback
+     */
+    public function explodely_ip_address_callback() {
+        ?>
+        <input type="text" id="dsmk_explodely_ip_address" name="dsmk_explodely_ip_address" value="<?php echo esc_attr( get_option( 'dsmk_explodely_ip_address' ) ); ?>" class="regular-text">
+        <p class="description"><?php esc_html_e( 'Enter your Explodely IP address.', 'dynamic-site-maker' ); ?></p>
+        <?php
+    }
+    
+    /**
+     * Explodely whitelisted IPs field callback
+     */
+    public function explodely_whitelisted_ips_callback() {
+        ?>
+        <textarea id="dsmk_explodely_whitelisted_ips" name="dsmk_explodely_whitelisted_ips" class="large-text"><?php echo esc_textarea( get_option( 'dsmk_explodely_whitelisted_ips' ) ); ?></textarea>
+        <p class="description"><?php esc_html_e( 'Enter the whitelisted IPs for Explodely API, one per line. You can use IP ranges (e.g. 192.168.1.0/24) or individual IPs (e.g. 192.168.1.100).', 'dynamic-site-maker' ); ?></p>
+        <?php
+    }
+
     /**
      * Test Explodely API connection
      */
@@ -1059,6 +1117,10 @@ class DSMK_Admin_Settings {
         
         if ( empty( $username ) || empty( $api_key ) ) {
             wp_send_json_error( array( 'message' => __( 'Username and API key are required.', 'dynamic-site-maker' ) ) );
+        }
+        
+        if ( ! $this->is_ip_whitelisted() ) {
+            wp_send_json_error( array( 'message' => __( 'Your IP address is not whitelisted for Explodely API access.', 'dynamic-site-maker' ) ) );
         }
         
         // Test API connection by trying to create a test user
@@ -1077,6 +1139,14 @@ class DSMK_Admin_Settings {
         $response = wp_remote_post( 'https://explodely.com/api/v1/aff', array(
             'body' => $test_data,
             'timeout' => 30,
+            'headers' => array(
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept' => 'application/json',
+                'Accept-Language' => 'en-US,en;q=0.9',
+                'Referer' => 'https://explodely.com/',
+                'Origin' => 'https://explodely.com',
+                'X-Requested-With' => 'XMLHttpRequest'
+            ),
         ) );
         
         if ( is_wp_error( $response ) ) {
@@ -1084,7 +1154,19 @@ class DSMK_Admin_Settings {
         }
         
         $body = wp_remote_retrieve_body( $response );
+        $status_code = wp_remote_retrieve_response_code( $response );
+        
+        // Check if we received a Cloudflare challenge or 403 error
+        if ( $status_code === 403 || strpos( $body, 'cf-browser-verification' ) !== false || strpos( $body, 'Just a moment' ) !== false ) {
+            wp_send_json_error( array( 'message' => __( 'The Explodely API is currently protected by Cloudflare. Please contact Explodely support to whitelist your server IP or get API access instructions.', 'dynamic-site-maker' ) ) );
+        }
+        
         $data = json_decode( $body, true );
+        
+        // Check if JSON parsing failed
+        if ( json_last_error() !== JSON_ERROR_NONE ) {
+            wp_send_json_error( array( 'message' => __( 'Error parsing API response. Please try again.', 'dynamic-site-maker' ) ) );
+        }
         
         if ( isset( $data['error'] ) && $data['error'] === 'invalidapikey' ) {
             wp_send_json_error( array( 'message' => __( 'Invalid API credentials. Please check your username and API key.', 'dynamic-site-maker' ) ) );
@@ -1092,6 +1174,37 @@ class DSMK_Admin_Settings {
         
         // If we got a response (even if it's an error like username_exists), the API connection is working
         wp_send_json_success( array( 'message' => __( 'API connection successful!', 'dynamic-site-maker' ) ) );
+    }
+
+    /**
+     * Check if an IP is whitelisted
+     *
+     * @return bool True if the IP is whitelisted, false otherwise.
+     */
+    public function is_ip_whitelisted() {
+        $whitelisted_ips = get_option( 'dsmk_explodely_whitelisted_ips' );
+        $whitelisted_ips = array_map( 'trim', explode( "\n", $whitelisted_ips ) );
+        $whitelisted_ips = array_filter( $whitelisted_ips );
+        
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $is_whitelisted = false;
+        foreach ( $whitelisted_ips as $whitelisted_ip ) {
+            if ( strpos( $whitelisted_ip, '/' ) !== false ) {
+                $range = explode( '/', $whitelisted_ip );
+                $range_ip = ip2long( $range[0] );
+                $range_cidr = (int) $range[1];
+                $ip_long = ip2long( $ip );
+                $network = $range_ip & ((1 << 32) - (1 << (32 - $range_cidr)));
+                $is_whitelisted = ($ip_long & ((1 << 32) - (1 << (32 - $range_cidr)))) === $network;
+            } else {
+                $is_whitelisted = $whitelisted_ip === $ip;
+            }
+            if ( $is_whitelisted ) {
+                break;
+            }
+        }
+        
+        return $is_whitelisted;
     }
 
     /**
