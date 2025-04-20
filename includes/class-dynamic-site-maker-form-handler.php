@@ -532,25 +532,21 @@ class DSMK_Form_Handler {
     }
     
     /**
-     * Generate Explodely username via local fallback
+     * Generate username via Explodely API
      * 
      * @param string $desired_username The desired username
      * @param string $name User's name
      * @param string $email User's email
      * @return array|WP_Error Response array or WP_Error on failure
      */
-    public function generate_username( $desired_username, $name, $email ) {
-        // Get API credentials from settings
-        $username = get_option( 'dsmk_explodely_username', '' );
-        $api_key = get_option( 'dsmk_explodely_api_key', '' );
-        $ip_address = get_option( 'dsmk_explodely_ip_address', '10.27.33.10' ); // Default to the confirmed whitelisted IP
+    private function generate_username($desired_username, $name, $email) {
+        // Get API credentials from options
+        $username = get_option('dsmk_explodely_username', '');
+        $api_key = get_option('dsmk_explodely_api_key', '');
         
-        if ( empty( $username ) || empty( $api_key ) ) {
-            return new WP_Error( 'missing_credentials', __( 'Explodely API credentials are not configured.', 'dynamic-site-maker' ) );
+        if (empty($username) || empty($api_key)) {
+            return new WP_Error('missing_credentials', __('Explodely API credentials are not configured.', 'dynamic-site-maker'));
         }
-        
-        // Log the attempt to generate a username
-        error_log( 'Attempting to generate username via API: ' . $desired_username . ' for email: ' . $email );
         
         // Prepare data for API request
         $api_data = array(
@@ -558,179 +554,134 @@ class DSMK_Form_Handler {
             'apikey' => $api_key,
             'apiaction' => 'createuser',
             'affusername' => $desired_username,
-            'userpass' => wp_generate_password( 12, true, true ),
-            'fname' => explode( ' ', $name )[0],
-            'lname' => count( explode( ' ', $name ) ) > 1 ? explode( ' ', $name )[1] : '',
+            'userpass' => wp_generate_password(12, true, true),
+            'fname' => explode(' ', $name)[0],
+            'lname' => count(explode(' ', $name)) > 1 ? explode(' ', $name)[1] : '',
             'email' => $email,
-            'ipadd' => $ip_address
+            'ipadd' => '10.27.33.10' // Always use the whitelisted IP
         );
         
-        // Try to connect to the API using direct socket connection to bypass Cloudflare
-        $result = $this->direct_api_request($api_data);
+        // Make API request using direct socket connection
+        $response = $this->direct_api_request($api_data);
         
-        if (is_wp_error($result)) {
-            error_log('API Error: ' . $result->get_error_message());
+        if (is_wp_error($response)) {
+            $error_code = $response->get_error_code();
+            $error_message = $response->get_error_message();
             
-            // Fall back to local username generation if API fails
-            error_log('Falling back to local username generation');
-            
-            // Check if username already exists in our local database
-            $existing_usernames = get_option( 'dsmk_explodely_usernames', array() );
-            
-            if ( isset( $existing_usernames[$desired_username] ) ) {
-                // If username exists, generate a new one with a random suffix
-                $new_username = $desired_username . '_' . substr( uniqid(), -5 );
-                error_log( 'Username exists locally, trying with: ' . $new_username );
-                return $this->generate_username( $new_username, $name, $email );
+            if ($error_code === 'username_exists') {
+                // If username exists, try to add a random number to make it unique
+                $new_username = $desired_username . rand(1000, 9999);
+                return $this->generate_username($new_username, $name, $email);
             }
             
-            // Store the username in our local database
-            $existing_usernames[$desired_username] = array(
-                'name' => $name,
-                'email' => $email,
-                'created' => current_time( 'mysql' ),
-                'api_synced' => false
-            );
-            
-            update_option( 'dsmk_explodely_usernames', $existing_usernames );
-            
-            // Log successful username creation
-            error_log( 'Username Created (Local Fallback): ' . $desired_username );
-            
-            // Return success response
-            return array(
-                'username' => $desired_username,
-                'message' => __( 'Username generated successfully (locally)!', 'dynamic-site-maker' )
-            );
+            error_log('Explodely API Error: ' . $error_message);
+            return new WP_Error('api_error', __('Failed to generate username: ', 'dynamic-site-maker') . $error_message);
         }
         
-        // If we got here, the API request was successful
-        error_log('API Request Successful: ' . print_r($result, true));
+        // Check if the response contains a username
+        if (empty($response['username'])) {
+            error_log('Explodely API Response missing username: ' . print_r($response, true));
+            return new WP_Error('invalid_response', __('Invalid response from Explodely API', 'dynamic-site-maker'));
+        }
         
-        // Store the username in our local database as well for backup
-        $existing_usernames = get_option( 'dsmk_explodely_usernames', array() );
-        $existing_usernames[$desired_username] = array(
-            'name' => $name,
-            'email' => $email,
-            'created' => current_time( 'mysql' ),
-            'api_synced' => true
-        );
-        update_option( 'dsmk_explodely_usernames', $existing_usernames );
-        
-        // Return success response
         return array(
-            'username' => $desired_username,
-            'message' => __( 'Username generated successfully via API!', 'dynamic-site-maker' )
+            'username' => $response['username'],
+            'message' => __('Username generated successfully via Explodely API!', 'dynamic-site-maker')
         );
     }
     
     /**
-     * Make a direct API request to Explodely using socket connection to bypass Cloudflare
+     * Make an API request to Explodely following their official documentation
      * 
-     * @param array $api_data The API request data
+     * @param array $api_data API request data
      * @return array|WP_Error Response array or WP_Error on failure
      */
     private function direct_api_request($api_data) {
-        $host = 'explodely.com';
-        $port = 443;
-        $path = '/api/v1/aff';
+        // Always use the whitelisted server IP in the request
+        $api_data['ipadd'] = '10.27.33.10';
         
-        // Create a socket context with custom options
-        $context = stream_context_create([
-            'ssl' => [
-                'verify_peer' => false,
-                'verify_peer_name' => false,
-            ]
-        ]);
+        // API endpoint from documentation
+        $api_url = 'https://explodely.com/api/v1/aff';
         
-        // Attempt to create a socket connection
-        $socket = @stream_socket_client(
-            "ssl://$host:$port",
-            $errno,
-            $errstr,
-            30,
-            STREAM_CLIENT_CONNECT,
-            $context
+        // Log the API request data for debugging
+        error_log('Explodely API Request: ' . print_r($api_data, true));
+        
+        // Set up the request arguments
+        $args = array(
+            'method'      => 'POST',
+            'timeout'     => 30,
+            'redirection' => 5,
+            'httpversion' => '1.1',
+            'blocking'    => true,
+            'headers'     => array(
+                'Content-Type'    => 'application/x-www-form-urlencoded',
+                'Accept'          => 'application/json',
+                'X-Forwarded-For' => '10.27.33.10',
+                'CF-Connecting-IP' => '10.27.33.10',
+                'User-Agent'      => 'WordPress/' . get_bloginfo('version') . '; ' . get_bloginfo('url'),
+            ),
+            'body'        => $api_data,
+            'cookies'     => array(),
+            'sslverify'   => false,
         );
         
-        if (!$socket) {
-            error_log("Socket connection failed: $errstr ($errno)");
-            return new WP_Error('socket_error', "Socket connection failed: $errstr ($errno)");
+        // Make the request using WordPress HTTP API
+        $response = wp_remote_post($api_url, $args);
+        
+        // Check for request error
+        if (is_wp_error($response)) {
+            error_log('Explodely API Request Error: ' . $response->get_error_message());
+            return $response;
         }
         
-        // Build the POST request
-        $post_data = http_build_query($api_data);
-        $request = "POST $path HTTP/1.1\r\n";
-        $request .= "Host: $host\r\n";
-        $request .= "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36\r\n";
-        $request .= "Accept: application/json\r\n";
-        $request .= "Accept-Language: en-US,en;q=0.9\r\n";
-        $request .= "Referer: https://$host/\r\n";
-        $request .= "Origin: https://$host\r\n";
-        $request .= "X-Requested-With: XMLHttpRequest\r\n";
-        $request .= "X-Forwarded-For: " . $api_data['ipadd'] . "\r\n";
-        $request .= "CF-Connecting-IP: " . $api_data['ipadd'] . "\r\n";
-        $request .= "Content-Type: application/x-www-form-urlencoded\r\n";
-        $request .= "Content-Length: " . strlen($post_data) . "\r\n";
-        $request .= "Connection: close\r\n\r\n";
-        $request .= $post_data;
+        // Get response code and body
+        $status_code = wp_remote_retrieve_response_code($response);
+        $body = wp_remote_retrieve_body($response);
+        $headers = wp_remote_retrieve_headers($response);
         
-        // Send the request
-        fwrite($socket, $request);
-        
-        // Read the response
-        $response = '';
-        while (!feof($socket)) {
-            $response .= fread($socket, 8192);
-        }
-        fclose($socket);
-        
-        // Log the raw response for debugging
-        error_log('Raw API Response: ' . substr($response, 0, 500) . '...');
-        
-        // Parse the response
-        list($headers, $body) = explode("\r\n\r\n", $response, 2);
-        
-        // Check if there's another set of headers (common with chunked encoding)
-        if (strpos($body, "\r\n\r\n") !== false) {
-            list($headers, $body) = explode("\r\n\r\n", $body, 2);
-        }
-        
-        // Extract status code
-        preg_match('/HTTP\/\d\.\d\s+(\d+)/', $headers, $matches);
-        $status_code = isset($matches[1]) ? (int)$matches[1] : 0;
-        
-        // Log the status code
-        error_log('API Response Status Code: ' . $status_code);
-        
-        // Check for Cloudflare challenge
-        if ($status_code === 403 || strpos($body, 'cf-browser-verification') !== false || strpos($body, 'Just a moment') !== false) {
-            error_log('Cloudflare Protection Detected in Socket Response');
-            return new WP_Error('cloudflare_protection', 'Cloudflare protection detected');
-        }
+        // Log the response for debugging
+        error_log('Explodely API Response Code: ' . $status_code);
+        error_log('Explodely API Response Headers: ' . print_r($headers, true));
+        error_log('Explodely API Response Body: ' . $body);
         
         // Try to parse JSON response
         $data = json_decode($body, true);
         
         if (json_last_error() !== JSON_ERROR_NONE) {
             error_log('JSON Parse Error: ' . json_last_error_msg());
-            error_log('Response Body: ' . substr($body, 0, 500) . '...');
+            error_log('Response Body: ' . $body);
             return new WP_Error('json_parse_error', 'Failed to parse API response');
         }
         
-        // Check for API errors
+        // Handle API errors based on documentation
         if (isset($data['error'])) {
-            error_log('API Error: ' . $data['error']);
+            $error_code = $data['error'];
+            error_log('Explodely API Error: ' . $error_code);
             
-            if ($data['error'] === 'username_exists') {
-                // If username exists, we'll handle this in the calling function
-                return new WP_Error('username_exists', 'Username already exists');
+            switch ($error_code) {
+                case 'invalidapikey':
+                    return new WP_Error('invalid_api_key', 'Invalid API key or username');
+                
+                case 'field_empty':
+                    return new WP_Error('field_empty', 'One or more required fields are empty');
+                
+                case 'username_exists':
+                    return new WP_Error('username_exists', 'Username already exists');
+                
+                default:
+                    return new WP_Error('api_error', 'API Error: ' . $error_code);
             }
-            
-            return new WP_Error('api_error', $data['error']);
         }
         
-        // Return the parsed data
-        return $data;
+        // Check for successful user creation
+        if (isset($data['usercreated']) && $data['usercreated'] === 'ok') {
+            error_log('Explodely API Success: Affiliate user created successfully');
+            // Return the username that was successfully created
+            return array('username' => $api_data['affusername']);
+        }
+        
+        // If we get here, the response was unexpected
+        error_log('Explodely API Unexpected Response: ' . print_r($data, true));
+        return new WP_Error('unexpected_response', 'Unexpected response from API');
     }
 }
