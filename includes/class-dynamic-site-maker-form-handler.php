@@ -539,6 +539,59 @@ class DSMK_Form_Handler {
      * @param string $email User's email
      * @return array|WP_Error Response array or WP_Error on failure
      */
+    /**
+     * Get the server's public IP address
+     * 
+     * @return string The public IP address of the server
+     */
+    private function get_server_public_ip() {
+        // Try to get the IP from cache first
+        $cached_ip = get_transient('dsmk_server_public_ip');
+        if ($cached_ip) {
+            return $cached_ip;
+        }
+        
+        // Services that can return the public IP
+        $ip_services = array(
+            'https://api.ipify.org/',
+            'https://ipinfo.io/ip',
+            'https://icanhazip.com/',
+            'https://ifconfig.me/ip'
+        );
+        
+        $public_ip = '';
+        
+        // Try each service until we get a valid IP
+        foreach ($ip_services as $service) {
+            $response = wp_remote_get($service, array('timeout' => 5));
+            
+            if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+                $ip = trim(wp_remote_retrieve_body($response));
+                
+                // Validate that this looks like an IP address
+                if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                    $public_ip = $ip;
+                    break;
+                }
+            }
+        }
+        
+        // If we couldn't get the public IP, fall back to server IP
+        if (empty($public_ip) && isset($_SERVER['SERVER_ADDR'])) {
+            $public_ip = $_SERVER['SERVER_ADDR'];
+        }
+        
+        // If we still don't have an IP, use a placeholder
+        if (empty($public_ip)) {
+            $public_ip = '127.0.0.1';
+        }
+        
+        // Cache the IP for 24 hours to avoid making too many external requests
+        set_transient('dsmk_server_public_ip', $public_ip, 24 * HOUR_IN_SECONDS);
+        
+        return $public_ip;
+    }
+    
     private function generate_username($desired_username, $name, $email) {
         // Get API credentials from options
         $username = get_option('dsmk_explodely_username', '');
@@ -547,6 +600,10 @@ class DSMK_Form_Handler {
         if (empty($username) || empty($api_key)) {
             return new WP_Error('missing_credentials', __('Explodely API credentials are not configured.', 'dynamic-site-maker'));
         }
+        
+        // Get the server's public IP address
+        $server_ip = $this->get_server_public_ip();
+        error_log('Using server public IP: ' . $server_ip);
         
         // Prepare data for API request
         $api_data = array(
@@ -558,7 +615,7 @@ class DSMK_Form_Handler {
             'fname' => explode(' ', $name)[0],
             'lname' => count(explode(' ', $name)) > 1 ? explode(' ', $name)[1] : '',
             'email' => $email,
-            'ipadd' => '10.27.33.10' // Always use the whitelisted IP
+            'ipadd' => $server_ip // Use the actual server IP
         );
         
         // Make API request using direct socket connection
@@ -597,8 +654,7 @@ class DSMK_Form_Handler {
      * @return array|WP_Error Response array or WP_Error on failure
      */
     private function direct_api_request($api_data) {
-        // Always use the whitelisted server IP in the request
-        $api_data['ipadd'] = '10.27.33.10';
+        // The server IP should already be set in the api_data by the calling function
         
         // API endpoint from documentation
         $api_url = 'https://explodely.com/api/v1/aff';
@@ -616,8 +672,8 @@ class DSMK_Form_Handler {
             'headers'     => array(
                 'Content-Type'    => 'application/x-www-form-urlencoded',
                 'Accept'          => 'application/json',
-                'X-Forwarded-For' => '10.27.33.10',
-                'CF-Connecting-IP' => '10.27.33.10',
+                'X-Forwarded-For' => $api_data['ipadd'],
+                'CF-Connecting-IP' => $api_data['ipadd'],
                 'User-Agent'      => 'WordPress/' . get_bloginfo('version') . '; ' . get_bloginfo('url'),
             ),
             'body'        => $api_data,
