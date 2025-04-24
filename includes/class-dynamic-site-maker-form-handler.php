@@ -695,6 +695,26 @@ class DSMK_Form_Handler {
         $body = wp_remote_retrieve_body($response);
         $headers = wp_remote_retrieve_headers($response);
         
+        // Extract and log Cloudflare RAY ID if present
+        $cf_ray = '';
+        if (isset($headers['cf-ray'])) {
+            $cf_ray = $headers['cf-ray'];
+        } elseif (is_array($headers) && !empty($headers)) {
+            // Headers might be case-insensitive, so we need to check all variations
+            foreach ($headers as $key => $value) {
+                if (strtolower($key) === 'cf-ray') {
+                    $cf_ray = $value;
+                    break;
+                }
+            }
+        }
+        
+        if (!empty($cf_ray)) {
+            error_log('Cloudflare RAY ID: ' . $cf_ray);
+        } else {
+            error_log('No Cloudflare RAY ID found in response headers');
+        }
+        
         // Log the response for debugging
         error_log('Explodely API Response Code: ' . $status_code);
         error_log('Explodely API Response Headers: ' . print_r($headers, true));
