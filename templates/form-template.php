@@ -542,9 +542,6 @@ function adjustBrightness($hex, $steps) {
                         </span>
                         <?php esc_html_e( 'Visit Your New Site', 'dynamic-site-maker' ); ?>
                     </a>
-                    <a href="<?php echo esc_url( remove_query_arg( array( 'dsmk-form' ) ) ); ?>" class="dsmk-button dsmk-button-secondary">
-                        <?php esc_html_e( 'Create Another Site', 'dynamic-site-maker' ); ?>
-                    </a>
                 </div>
             </div>
         </div>
