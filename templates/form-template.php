@@ -367,18 +367,6 @@ function adjustBrightness($hex, $steps) {
                 <div class="dsmk-form-step" data-step="3">
                     <h3><?php esc_html_e( 'Enter Your Explodely Username', 'dynamic-site-maker' ); ?></h3>
                     
-                    <div class="dsmk-notice dsmk-notice--info" style="margin-bottom: 15px;">
-                        <div class="dsmk-notice-icon">
-                            <svg viewBox="0 0 24 24" width="24" height="24">
-                                <path fill="currentColor" d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M13,7H11V9H13V7M13,11H11V17H13V11Z" />
-                            </svg>
-                        </div>
-                        <div class="dsmk-notice-content">
-                            <p><?php esc_html_e( 'You need an Explodely affiliate account to use this service.', 'dynamic-site-maker' ); ?>
-                            <br><a href="https://explodely.com/affiliate/signup" target="_blank" class="dsmk-link"><?php esc_html_e( 'Click here to sign up for an Explodely account', 'dynamic-site-maker' ); ?></a></p>
-                        </div>
-                    </div>
-                    
                     <div class="dsmk-form-field">
                         <label for="dsmk-username" class="dsmk-form-label">
                             <?php esc_html_e( 'Your Explodely Username', 'dynamic-site-maker' ); ?>
@@ -398,7 +386,17 @@ function adjustBrightness($hex, $steps) {
                             <?php esc_html_e( 'Enter your existing Explodely username. This is required to create your affiliate site.', 'dynamic-site-maker' ); ?>
                         </p>
                     </div>
-                    
+                    <div class="dsmk-notice dsmk-notice--info" style="margin-bottom: 15px;">
+                        <div class="dsmk-notice-icon">
+                            <svg viewBox="0 0 24 24" width="24" height="24">
+                                <path fill="currentColor" d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M13,7H11V9H13V7M13,11H11V17H13V11Z" />
+                            </svg>
+                        </div>
+                        <div class="dsmk-notice-content">
+                            <p><?php esc_html_e( 'You need an Explodely affiliate account to use this service.', 'dynamic-site-maker' ); ?>
+                            <br><a href="https://explodely.com/affiliate/signup" target="_blank" class="dsmk-link"><?php esc_html_e( 'Click here to sign up for an Explodely account', 'dynamic-site-maker' ); ?></a></p>
+                        </div>
+                    </div>
                     <div class="dsmk-form-actions">
                         <button type="button" class="dsmk-button dsmk-button-prev" data-prev="2">
                             <span class="dsmk-button-icon-left">
