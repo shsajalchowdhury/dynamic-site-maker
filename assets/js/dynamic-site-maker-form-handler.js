@@ -7,12 +7,36 @@
     'use strict';
 
     /**
+     * Update hidden affiliate link field with username
+     */
+    function updateAffiliateLink() {
+        const username = $('#dsmk-username').val();
+        const baseUrl = $('input[name="affiliate_link"]:checked').val();
+        if (baseUrl && username) {
+            $('#dsmk-affiliate-link').val(baseUrl + username);
+            console.log('Updated affiliate link: ' + baseUrl + username);
+        }
+    }
+    
+    /**
      * Update username placeholders in affiliate links
      * 
      * @param {string} username The username to display in placeholders
      */
     function updateUsernamePlaceholders(username) {
+        // Update the text of all username placeholder elements
         $('.dsmk-username-placeholder').text(username || '');
+        console.log('Updating username placeholders to: ' + username);
+        
+        // Make the username placeholders visible if there's a username
+        if (username && username.trim() !== '') {
+            $('.dsmk-username-placeholder').addClass('has-username');
+        } else {
+            $('.dsmk-username-placeholder').removeClass('has-username');
+        }
+        
+        // Force update the hidden affiliate link field
+        updateAffiliateLink();
     }
 
     // Initialize the form handler when the document is ready
@@ -27,16 +51,30 @@
             updateUsernamePlaceholders(initialUsername);
         }
         
+        // If we're on step 4 (affiliate links), ensure username placeholders are updated
+        if ($('.dsmk-form-step[data-step="4"]:visible').length) {
+            console.log('Page loaded on step 4, updating username placeholders');
+            updateUsernamePlaceholders($('#dsmk-username').val());
+            // Ensure a radio button is selected
+            if (!$('input[name="affiliate_link"]:checked').length) {
+                $('input[name="affiliate_link"]:first').prop('checked', true).trigger('change');
+            }
+        }
+        
         // Update username placeholders when username field changes
         $('#dsmk-username').on('input change', function() {
             updateUsernamePlaceholders($(this).val());
         });
         
-        // Update hidden affiliate link field when a radio button is selected
-        $('input[name="affiliate_link"]').on('change', function() {
-            const username = $('#dsmk-username').val();
-            const baseUrl = $(this).val();
-            $('#dsmk-affiliate-link').val(baseUrl + username);
+        // Update affiliate link when radio button changes
+        $('input[name="affiliate_link"]').on('change', updateAffiliateLink);
+        
+        // Update affiliate link when username changes
+        $('#dsmk-username').on('input change', updateAffiliateLink);
+        
+        // Ensure affiliate link is updated before form submission
+        $('#dsmk-form').on('submit', function() {
+            updateAffiliateLink();
         });
     });
 
@@ -100,14 +138,31 @@
      * @param {number} stepNumber The step number to navigate to
      */
     function goToStep(stepNumber) {
-        // Hide all steps
-        $('.dsmk-form-step').removeClass('active');
+        $('.dsmk-form-step').hide();
+        $('[data-step="' + stepNumber + '"]').show();
         
-        // Show the target step
-        $(`.dsmk-form-step[data-step="${stepNumber}"]`).addClass('active');
+        // Update the progress indicator
+        $('.dsmk-progress-step').removeClass('active completed');
         
-        // Update progress indicators
-        updateProgress(stepNumber);
+        // Mark current step as active
+        $('.dsmk-progress-step[data-step="' + stepNumber + '"]').addClass('active');
+        
+        // Mark previous steps as completed
+        for (let i = 1; i < stepNumber; i++) {
+            $('.dsmk-progress-step[data-step="' + i + '"]').addClass('completed');
+        }
+        
+        // If navigating to the affiliate link step, ensure username placeholders are updated
+        if (stepNumber === 4) {
+            const username = $('#dsmk-username').val();
+            console.log('Navigated to step 4, updating username placeholders with: ' + username);
+            updateUsernamePlaceholders(username);
+            
+            // Ensure a radio button is selected
+            if (!$('input[name="affiliate_link"]:checked').length) {
+                $('input[name="affiliate_link"]:first').prop('checked', true).trigger('change');
+            }
+        }
         
         // Scroll to top of form
         $('html, body').animate({
@@ -521,25 +576,43 @@
             // Hide form and show success message
             $form.hide();
             $('.dsmk-form-loading').hide();
-            $('.dsmk-form-success').show();
             
-            // Set up the Visit Site button with the correct URL
+            // Update success message with page URL
+            const $successMessage = $('.dsmk-form-success');
             const $visitButton = $('#dsmk-visit-site');
-            if (response.data.url) {
-                $visitButton.attr('href', response.data.url);
+            const pageUrl = response.data.redirect || response.data.url || '';
+            
+            if (pageUrl) {
+                // Update the visit button href
+                $visitButton.attr('href', pageUrl);
+                
+                // Add the URL to the success message
+                const $urlDisplay = $('<div class="dsmk-page-url-display">');
+                $urlDisplay.html('<p>Your page has been created at:</p><a href="' + pageUrl + '" target="_blank" class="dsmk-page-url">' + pageUrl + '</a>');
+                
+                // Insert URL display before the visit button
+                $urlDisplay.insertBefore($visitButton.parent());
+                
+                // Show the success message
+                $successMessage.show();
                 
                 // Scroll to the success message
                 $('html, body').animate({
-                    scrollTop: $('.dsmk-form-success').offset().top - 50
+                    scrollTop: $successMessage.offset().top - 50
                 }, 300);
                 
-                // Add a subtle highlight effect to the button to draw attention
+                // Add a subtle highlight effect to the button and URL
                 setTimeout(function() {
                     $visitButton.addClass('dsmk-button-highlight');
+                    $('.dsmk-page-url').addClass('dsmk-url-highlight');
                     setTimeout(function() {
                         $visitButton.removeClass('dsmk-button-highlight');
+                        $('.dsmk-page-url').removeClass('dsmk-url-highlight');
                     }, 1500);
                 }, 500);
+            } else {
+                // Show a generic success message if no URL is available
+                $successMessage.show();
             }
         } else {
             // Hide loading overlay

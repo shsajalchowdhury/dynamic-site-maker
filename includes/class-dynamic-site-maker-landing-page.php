@@ -55,7 +55,26 @@ class DSMK_Landing_Page {
         update_post_meta( $page_id, '_dsmk_name', sanitize_text_field( $data['name'] ) );
         update_post_meta( $page_id, '_dsmk_email', sanitize_email( $data['email'] ) );
         update_post_meta( $page_id, '_dsmk_logo_id', absint( $data['logo_id'] ) );
-        update_post_meta( $page_id, '_dsmk_affiliate_link', esc_url_raw( $data['affiliate_link'] ) );
+        
+        // Extract username from the affiliate link if possible
+        $username = '';
+        if (isset($data['username'])) {
+            $username = sanitize_text_field($data['username']);
+            update_post_meta($page_id, '_dsmk_username', $username);
+        }
+        
+        // Ensure the affiliate link includes the username
+        $affiliate_link = $data['affiliate_link'];
+        if (!empty($username) && strpos($affiliate_link, $username) === false) {
+            // If username is not already in the link, append it
+            if (substr($affiliate_link, -1) !== '=') {
+                $affiliate_link .= '=';
+            }
+            $affiliate_link .= $username;
+        }
+        
+        update_post_meta($page_id, '_dsmk_affiliate_link', esc_url_raw($affiliate_link));
+        error_log('Stored affiliate link in page meta: ' . $affiliate_link);
 
         // Apply the Elementor template to the page
         $this->apply_elementor_template( $page_id );
@@ -93,6 +112,17 @@ class DSMK_Landing_Page {
         // Check if Elementor is active
         if ( ! did_action( 'elementor/loaded' ) ) {
             return false;
+        }
+        
+        // Get logo ID and set default if not provided
+        $logo_id = get_post_meta($page_id, '_dsmk_logo_id', true);
+        if (empty($logo_id) || $logo_id == 0) {
+            // Use default logo from plugin settings or a placeholder
+            $default_logo_id = get_option('dsmk_default_logo_id', 0);
+            if ($default_logo_id > 0) {
+                update_post_meta($page_id, '_dsmk_logo_id', $default_logo_id);
+                $logo_id = $default_logo_id;
+            }
         }
 
         // Set the page to use Elementor
@@ -192,6 +222,17 @@ class DSMK_Landing_Page {
      * @return array Default template data with dynamic fields.
      */
     private function get_default_template_data() {
+        // Get default logo information
+        $default_logo_id = get_option('dsmk_default_logo_id', 0);
+        $default_logo_url = '';
+        
+        if ($default_logo_id > 0) {
+            $default_logo_url = wp_get_attachment_url($default_logo_id);
+        } else {
+            // Use plugin's default logo if no custom default is set
+            $default_logo_url = plugin_dir_url(dirname(__FILE__)) . 'assets/images/default-logo.png';
+        }
+        
         // Simple template with dynamic fields
         return array(
             array(
@@ -227,6 +268,10 @@ class DSMK_Landing_Page {
                                     'image' => array(
                                         'id' => '{{logo_id}}',
                                         'url' => '{{logo_url}}',
+                                        'default' => array(
+                                            'id' => $default_logo_id,
+                                            'url' => $default_logo_url,
+                                        ),
                                     ),
                                     'align' => 'center',
                                 ),

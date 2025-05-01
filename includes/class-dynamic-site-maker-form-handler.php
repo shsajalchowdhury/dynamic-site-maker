@@ -77,94 +77,135 @@ class DSMK_Form_Handler {
         
         // Validate username
         if ( empty( $_POST['username'] ) ) {
-            wp_send_json_error( array( 'message' => __( 'Username is required.', 'dynamic-site-maker' ) ) );
+            wp_send_json_error( array( 'message' => __( 'Explodely username is required.', 'dynamic-site-maker' ) ) );
         }
-        $desired_username = sanitize_text_field( wp_unslash( $_POST['username'] ) );
+        $username = sanitize_text_field( wp_unslash( $_POST['username'] ) );
         
         // Validate username format (alphanumeric, underscores, and hyphens only)
-        if ( ! preg_match( '/^[a-zA-Z0-9_-]+$/', $desired_username ) ) {
-            wp_send_json_error( array( 'message' => __( 'Please enter a valid username (only letters, numbers, underscores, and hyphens allowed).', 'dynamic-site-maker' ) ) );
+        if ( ! preg_match( '/^[a-zA-Z0-9_-]+$/', $username ) ) {
+            wp_send_json_error( array( 'message' => __( 'Please enter a valid Explodely username (only letters, numbers, underscores, and hyphens allowed).', 'dynamic-site-maker' ) ) );
         }
         
-        // Generate Explodely username via local fallback
-        $username_response = $this->generate_username( $desired_username, $name, $email );
+        // Store the username in the database for reference
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'dsmk_usernames';
         
-        if ( is_wp_error( $username_response ) ) {
-            wp_send_json_error( array( 'message' => $username_response->get_error_message() ) );
+        // Create the table if it doesn't exist
+        if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
+            $charset_collate = $wpdb->get_charset_collate();
+            $sql = "CREATE TABLE $table_name (
+                id mediumint(9) NOT NULL AUTO_INCREMENT,
+                username varchar(100) NOT NULL,
+                email varchar(100) NOT NULL,
+                created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                PRIMARY KEY  (id)
+            ) $charset_collate;";
+            
+            require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+            dbDelta($sql);
         }
         
-        $username = $username_response['username'];
+        // Record the username (don't enforce uniqueness)
+        $wpdb->insert(
+            $table_name,
+            array(
+                'username' => $username,
+                'email' => $email
+            )
+        );
 
         // Validate affiliate link
         if ( empty( $_POST['affiliate_link'] ) ) {
             wp_send_json_error( array( 'message' => __( 'Affiliate link is required.', 'dynamic-site-maker' ) ) );
         }
-        $affiliate_link = sanitize_text_field( wp_unslash( $_POST['affiliate_link'] ) );
+        
+        // Check if we have a full affiliate link with username
+        if ( !empty( $_POST['full_affiliate_link'] ) ) {
+            $affiliate_link = sanitize_text_field( wp_unslash( $_POST['full_affiliate_link'] ) );
+        } else {
+            // If not, construct it from the base link and username
+            $base_link = sanitize_text_field( wp_unslash( $_POST['affiliate_link'] ) );
+            $affiliate_link = $base_link . $username;
+        }
+        
         // Ensure it's a valid URL
         $affiliate_link = esc_url_raw( $affiliate_link );
+        
+        // Log the affiliate link for debugging
+        error_log('Using affiliate link: ' . $affiliate_link);
 
-        // Process logo upload
-        $logo_id = 0;
-        if ( ! empty( $_FILES['logo'] ) ) {
-            if ( ! function_exists( 'wp_handle_upload' ) ) {
+        // Process logo upload (optional)
+        $logo_id = 0; // Default to 0 (no logo)
+        
+        // Only process logo if one was uploaded
+        if (!empty($_FILES['logo']) && isset($_FILES['logo']['name']) && !empty($_FILES['logo']['name'])) {
+            if (!function_exists('wp_handle_upload')) {
                 require_once ABSPATH . 'wp-admin/includes/file.php';
             }
-            if ( ! function_exists( 'wp_generate_attachment_metadata' ) ) {
+            if (!function_exists('wp_generate_attachment_metadata')) {
                 require_once ABSPATH . 'wp-admin/includes/image.php';
             }
 
             $upload_overrides = array(
                 'test_form' => false,
             );
-
-            // Validate file exists and has a name
-            if ( ! isset( $_FILES['logo']['name'] ) || empty( $_FILES['logo']['name'] ) ) {
-                wp_send_json_error( array( 'message' => __( 'No logo file was uploaded.', 'dynamic-site-maker' ) ) );
-            }
             
             // Sanitize the file name
-            $file_name = sanitize_file_name( wp_unslash( $_FILES['logo']['name'] ) );
+            $file_name = sanitize_file_name(wp_unslash($_FILES['logo']['name']));
             
             // Validate file type
-            $file_info = wp_check_filetype( basename( $file_name ) );
-            $allowed_types = array( 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'svg' => 'image/svg+xml' );
+            $file_info = wp_check_filetype(basename($file_name));
+            $allowed_types = array('jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'svg' => 'image/svg+xml');
+            $allowed_mimes = array_values($allowed_types);
             
-            if ( empty( $file_info['ext'] ) || ! array_key_exists( $file_info['ext'], $allowed_types ) ) {
-                wp_send_json_error( array( 'message' => __( 'Invalid file format. Allowed formats: JPG, PNG, SVG.', 'dynamic-site-maker' ) ) );
+            // Special handling for SVG files which might be detected as text/html or text/xml
+            $is_svg = false;
+            if (preg_match('/\.svg$/i', $file_name)) {
+                $is_svg = true;
+                // Add additional MIME types that SVGs might be detected as
+                $allowed_mimes = array_merge($allowed_mimes, ['text/html', 'text/xml', 'application/xml', 'text/plain']);
+            }
+            
+            error_log('File info: ' . print_r($file_info, true));
+            error_log('File name: ' . $file_name);
+            error_log('Is SVG: ' . ($is_svg ? 'yes' : 'no'));
+            
+            if ((empty($file_info['ext']) || !array_key_exists($file_info['ext'], $allowed_types)) && 
+                (empty($file_info['type']) || !in_array($file_info['type'], $allowed_mimes))) {
+                wp_send_json_error(array('message' => __('Invalid file format. Allowed formats: JPG, PNG, SVG.', 'dynamic-site-maker')));
             }
 
             // Validate file size (5MB max)
-            if ( ! isset( $_FILES['logo']['size'] ) || $_FILES['logo']['size'] > 5 * 1024 * 1024 ) {
-                wp_send_json_error( array( 'message' => __( 'Logo file size exceeds the limit of 5MB.', 'dynamic-site-maker' ) ) );
+            if (!isset($_FILES['logo']['size']) || $_FILES['logo']['size'] > 5 * 1024 * 1024) {
+                wp_send_json_error(array('message' => __('Logo file size exceeds the limit of 5MB.', 'dynamic-site-maker')));
             }
 
-            $movefile = wp_handle_upload( $_FILES['logo'], $upload_overrides );
+            $movefile = wp_handle_upload($_FILES['logo'], $upload_overrides);
 
-            if ( $movefile && ! isset( $movefile['error'] ) ) {
+            if ($movefile && !isset($movefile['error'])) {
                 $file_path = $movefile['file'];
                 $file_url = $movefile['url'];
                 $file_type = $movefile['type'];
                 $attachment = array(
                     'guid'           => $file_url,
                     'post_mime_type' => $file_type,
-                    'post_title'     => preg_replace( '/\.[^.]+$/', '', basename( $file_path ) ),
+                    'post_title'     => preg_replace('/\.[^.]+$/', '', basename($file_path)),
                     'post_content'   => '',
                     'post_status'    => 'inherit',
                 );
-                $logo_id = wp_insert_attachment( $attachment, $file_path );
+                $logo_id = wp_insert_attachment($attachment, $file_path);
                 
-                if ( ! is_wp_error( $logo_id ) ) {
-                    $attachment_data = wp_generate_attachment_metadata( $logo_id, $file_path );
-                    wp_update_attachment_metadata( $logo_id, $attachment_data );
+                if (!is_wp_error($logo_id)) {
+                    $attachment_data = wp_generate_attachment_metadata($logo_id, $file_path);
+                    wp_update_attachment_metadata($logo_id, $attachment_data);
                 } else {
-                    wp_send_json_error( array( 'message' => __( 'Failed to save logo.', 'dynamic-site-maker' ) ) );
+                    wp_send_json_error(array('message' => __('Failed to save logo.', 'dynamic-site-maker')));
                 }
             } else {
-                wp_send_json_error( array( 'message' => __( 'Failed to upload logo.', 'dynamic-site-maker' ) ) );
+                wp_send_json_error(array('message' => __('Failed to upload logo.', 'dynamic-site-maker')));
             }
-        } else {
-            wp_send_json_error( array( 'message' => __( 'Logo is required.', 'dynamic-site-maker' ) ) );
         }
+        // No error if no logo is provided - it's optional now
 
         // Check if we're editing an existing page or creating a new one
         if ( $is_edit_mode && $existing_page_id > 0 ) {
@@ -172,7 +213,10 @@ class DSMK_Form_Handler {
             update_post_meta( $existing_page_id, '_dsmk_name', $name );
             update_post_meta( $existing_page_id, '_dsmk_email', $email );
             update_post_meta( $existing_page_id, '_dsmk_logo_id', $logo_id );
+            update_post_meta( $existing_page_id, '_dsmk_username', $username ); // Store username separately
             update_post_meta( $existing_page_id, '_dsmk_affiliate_link', $affiliate_link );
+            
+            error_log('Updating page with affiliate link: ' . $affiliate_link);
             
             // Update Elementor content if needed
             $this->update_elementor_content( $existing_page_id, 'logo', $logo_id );
@@ -191,7 +235,15 @@ class DSMK_Form_Handler {
         } else {
             // Create new landing page
             $landing_page = new DSMK_Landing_Page();
-            $page_id = $landing_page->create_page( $name, $email, $logo_id, $affiliate_link );
+            $page_data = array(
+                'name' => $name,
+                'email' => $email,
+                'logo_id' => $logo_id,
+                'affiliate_link' => $affiliate_link,
+                'username' => $username
+            );
+            error_log('Creating page with affiliate link: ' . $affiliate_link);
+            $page_id = $landing_page->create_page($page_data);
             
             if ( ! $page_id ) {
                 wp_send_json_error( array( 'message' => __( 'Failed to create landing page.', 'dynamic-site-maker' ) ) );
@@ -472,8 +524,11 @@ class DSMK_Form_Handler {
             'username' => array(
                 'type'        => 'text',
                 'label'       => __( 'Explodely Username', 'dynamic-site-maker' ),
-                'placeholder' => __( 'Enter desired username', 'dynamic-site-maker' ),
-                'description' => __( 'Enter your desired Explodely username', 'dynamic-site-maker' ),
+                'placeholder' => __( 'Enter your Explodely username', 'dynamic-site-maker' ),
+                'description' => sprintf(
+                    __( 'Enter your Explodely username. Don\'t have one? <a href="%s" target="_blank">Sign up here</a>', 'dynamic-site-maker' ),
+                    'https://explodely.com/affiliate/signup'
+                ),
                 'required'    => true,
             ),
             'affiliate_link' => array(

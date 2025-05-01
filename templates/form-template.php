@@ -42,6 +42,78 @@ $link_placeholder = get_option('dsmk_shortcode_link_placeholder', 'https://examp
 
 // Generate custom CSS based on settings
 $custom_css = "
+/* Username Placeholder Highlight */
+.dsmk-username-placeholder {
+    display: inline-block;
+    min-width: 50px;
+    font-weight: bold;
+    color: #0073aa;
+    border-bottom: 1px dashed #0073aa;
+    padding: 0 2px;
+}
+
+.dsmk-username-placeholder.has-username {
+    background-color: #e6f3fa;
+    border: 1px solid #0073aa;
+    border-radius: 3px;
+    padding: 2px 5px;
+    margin: 0 2px;
+    animation: pulse 1s ease-in-out;
+}
+
+@keyframes pulse {
+    0% { background-color: #e6f3fa; }
+    50% { background-color: #b3e0ff; }
+    100% { background-color: #e6f3fa; }
+}
+
+/* Success Message Styling */
+.dsmk-form-success {
+    background-color: #f0f9e8;
+    border: 1px solid #4caf50;
+    border-radius: 5px;
+    padding: 20px;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.dsmk-form-success h3 {
+    color: #2e7d32;
+    margin-top: 0;
+}
+
+.dsmk-page-url-display {
+    margin: 15px 0;
+    padding: 15px;
+    background-color: #f5f5f5;
+    border-radius: 5px;
+    border: 1px solid #e0e0e0;
+}
+
+.dsmk-page-url {
+    display: block;
+    font-weight: bold;
+    word-break: break-all;
+    padding: 10px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    margin: 10px 0;
+    color: #0073aa;
+    text-decoration: none;
+}
+
+.dsmk-page-url:hover {
+    background-color: #f0f7fc;
+    color: #00a0d2;
+}
+
+.dsmk-url-highlight {
+    background-color: #e6f7ff;
+    border-color: #0073aa;
+    box-shadow: 0 0 5px rgba(0, 115, 170, 0.5);
+}
+
 .dsmk-form-header {
     background: linear-gradient(135deg, {$header_bg_color}, " . adjustBrightness($header_bg_color, -20) . ");
 }
@@ -293,11 +365,23 @@ function adjustBrightness($hex, $steps) {
                 
                 <!-- Step 3 - Username -->
                 <div class="dsmk-form-step" data-step="3">
-                    <h3><?php esc_html_e( 'Set Up Your Explodely Affiliate Account', 'dynamic-site-maker' ); ?></h3>
+                    <h3><?php esc_html_e( 'Enter Your Explodely Username', 'dynamic-site-maker' ); ?></h3>
+                    
+                    <div class="dsmk-notice dsmk-notice--info" style="margin-bottom: 15px;">
+                        <div class="dsmk-notice-icon">
+                            <svg viewBox="0 0 24 24" width="24" height="24">
+                                <path fill="currentColor" d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M13,7H11V9H13V7M13,11H11V17H13V11Z" />
+                            </svg>
+                        </div>
+                        <div class="dsmk-notice-content">
+                            <p><?php esc_html_e( 'You need an Explodely affiliate account to use this service.', 'dynamic-site-maker' ); ?>
+                            <br><a href="https://explodely.com/affiliate/signup" target="_blank" class="dsmk-link"><?php esc_html_e( 'Click here to sign up for an Explodely account', 'dynamic-site-maker' ); ?></a></p>
+                        </div>
+                    </div>
                     
                     <div class="dsmk-form-field">
                         <label for="dsmk-username" class="dsmk-form-label">
-                            <?php esc_html_e( 'Desired Username', 'dynamic-site-maker' ); ?>
+                            <?php esc_html_e( 'Your Explodely Username', 'dynamic-site-maker' ); ?>
                             <span class="dsmk-form-required">*</span>
                         </label>
                         <div class="dsmk-input-wrapper">
@@ -305,27 +389,14 @@ function adjustBrightness($hex, $steps) {
                                    id="dsmk-username" 
                                    name="username" 
                                    class="dsmk-form-input" 
-                                   placeholder="<?php esc_attr_e( 'Enter your desired username', 'dynamic-site-maker' ); ?>"
+                                   placeholder="<?php esc_attr_e( 'Enter your Explodely username', 'dynamic-site-maker' ); ?>"
                                    pattern="[a-zA-Z0-9_-]+"
                                    title="<?php esc_attr_e('Only letters, numbers, underscores, and hyphens are allowed', 'dynamic-site-maker'); ?>"
                                    required>
-                            <button type="button" id="dsmk-generate-username" class="dsmk-button dsmk-button-secondary" style="margin-top: 10px;">
-                                <?php esc_html_e( 'Generate Username', 'dynamic-site-maker' ); ?>
-                            </button>
                         </div>
                         <p class="dsmk-form-description">
-                            <?php esc_html_e( 'Enter your desired Explodely username or click Generate Username to create one automatically.', 'dynamic-site-maker' ); ?>
+                            <?php esc_html_e( 'Enter your existing Explodely username. This is required to create your affiliate site.', 'dynamic-site-maker' ); ?>
                         </p>
-                        <div class="dsmk-notice dsmk-notice--info" style="margin-top: 15px;">
-                            <div class="dsmk-notice-icon">
-                                <svg viewBox="0 0 24 24" width="24" height="24">
-                                    <path fill="currentColor" d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M13,7H11V9H13V7M13,11H11V17H13V11Z" />
-                                </svg>
-                            </div>
-                            <div class="dsmk-notice-content">
-                                <p><?php esc_html_e( 'If your desired username is not available, a similar one will be generated for you.', 'dynamic-site-maker' ); ?></p>
-                            </div>
-                        </div>
                     </div>
                     
                     <div class="dsmk-form-actions">
