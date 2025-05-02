@@ -529,8 +529,8 @@ function adjustBrightness($hex, $steps) {
                         <path fill="currentColor" d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M11,16.5L6.5,12L7.91,10.59L11,13.67L16.59,8.09L18,9.5L11,16.5Z" />
                     </svg>
                 </div>
-                <h3><?php echo esc_html( get_option( 'dsmk_form_success_message', __( 'Site created successfully!', 'dynamic-site-maker' ) ) ); ?></h3>
-                <p><?php esc_html_e( 'Your new affiliate site is ready to use!', 'dynamic-site-maker' ); ?></p>
+                <h3><?php echo esc_html( get_option( 'dsmk_success_message', __( 'Site created successfully!', 'dynamic-site-maker' ) ) ); ?></h3>
+                <p><?php echo esc_html( get_option( 'dsmk_success_description', __( 'Your new affiliate site is ready to use!', 'dynamic-site-maker' ) ) ); ?></p>
                 <div class="dsmk-success-actions">
                     <a href="#" id="dsmk-visit-site" class="dsmk-button dsmk-button-primary" target="_blank">
                         <span class="dsmk-button-icon-left">

@@ -7,6 +7,83 @@
     'use strict';
 
     /**
+     * Extract price from affiliate link URL
+     * 
+     * @param {string} url The affiliate link URL
+     * @return {string|null} The price if found, null otherwise
+     */
+    function extractPriceFromUrl(url) {
+        if (!url) return null;
+        
+        // Try to find price patterns in the URL
+        // Common patterns: price=$97, $97, 97dollars, 97usd, etc.
+        const pricePatterns = [
+            /[?&]price=\$(\d+)/i,          // price=$97
+            /[?&]amount=\$(\d+)/i,         // amount=$97
+            /[?&]cost=\$(\d+)/i,           // cost=$97
+            /\$(\d+)/i,                    // $97 anywhere in URL
+            /(\d+)dollars/i,               // 97dollars
+            /(\d+)usd/i                     // 97usd
+        ];
+        
+        for (const pattern of pricePatterns) {
+            const match = url.match(pattern);
+            if (match && match[1]) {
+                console.log('Price found in URL:', match[1]);
+                return match[1];
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Update button text based on price
+     * 
+     * @param {string} price The price to include in button text
+     */
+    function updateButtonText(price) {
+        const $affiliateButtons = $('.dsmk-affiliate');
+        
+        if (!$affiliateButtons.length) {
+            console.log('No affiliate buttons found with class dsmk-affiliate');
+            return;
+        }
+        
+        if (price) {
+            // Store original button text if not already stored
+            $affiliateButtons.each(function() {
+                const $button = $(this);
+                if (!$button.data('original-text')) {
+                    $button.data('original-text', $button.text().trim());
+                }
+                
+                // Update button text with price
+                const originalText = $button.data('original-text');
+                if (originalText.toLowerCase().includes('reserve') || 
+                    originalText.toLowerCase().includes('get') || 
+                    originalText.toLowerCase().includes('buy')) {
+                    $button.text(originalText + ' For $' + price);
+                } else {
+                    $button.text('Reserve Your Seat For $' + price);
+                }
+                
+                console.log('Updated button text with price: $' + price);
+            });
+        } else {
+            // Restore original button text if available
+            $affiliateButtons.each(function() {
+                const $button = $(this);
+                const originalText = $button.data('original-text');
+                if (originalText) {
+                    $button.text(originalText);
+                }
+            });
+            console.log('Restored original button text (no price found)');
+        }
+    }
+    
+    /**
      * Update hidden affiliate link field with username
      */
     function updateAffiliateLink() {
@@ -15,6 +92,10 @@
         if (baseUrl && username) {
             $('#dsmk-affiliate-link').val(baseUrl + username);
             console.log('Updated affiliate link: ' + baseUrl + username);
+            
+            // Extract price from URL and update button text
+            const price = extractPriceFromUrl(baseUrl);
+            updateButtonText(price);
         }
     }
     

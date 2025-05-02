@@ -331,64 +331,45 @@ class DSMK_Landing_Page {
             
             // Handle image widgets - for logo replacement or preservation
             if (isset($element['widgetType']) && $element['widgetType'] === 'image') {
-                // Debug all image widget properties to understand the structure
-                error_log('Found image widget: ' . json_encode(array_keys($element['settings'])));
-                
-                // Try multiple approaches to identify the logo widget
+                // ONLY identify logo widgets by the CSS class 'dsmk-logo'
                 $is_logo_widget = false;
                 $logo_identifier = '';
                 
-                // Check CSS classes
+                // Check CSS classes - STRICT check for 'dsmk-logo'
                 if (isset($element['settings']['_css_classes'])) {
                     error_log('CSS classes: ' . $element['settings']['_css_classes']);
                     if (strpos($element['settings']['_css_classes'], 'dsmk-logo') !== false) {
                         $is_logo_widget = true;
-                        $logo_identifier = 'CSS class';
+                        $logo_identifier = 'CSS class dsmk-logo';
+                        error_log('Found logo widget with CSS class dsmk-logo');
                     }
                 }
                 
-                // Check element ID
-                if (isset($element['settings']['_element_id'])) {
+                // Check element ID - STRICT check for 'dsmk-logo'
+                if (isset($element['settings']['_element_id']) && !$is_logo_widget) {
                     error_log('Element ID: ' . $element['settings']['_element_id']);
                     if ($element['settings']['_element_id'] === 'dsmk-logo') {
                         $is_logo_widget = true;
-                        $logo_identifier = 'element ID';
+                        $logo_identifier = 'element ID dsmk-logo';
+                        error_log('Found logo widget with element ID dsmk-logo');
                     }
                 }
                 
-                // Check custom CSS ID (another possible location)
-                if (isset($element['settings']['css_id'])) {
+                // Check custom CSS ID - STRICT check for 'dsmk-logo'
+                if (isset($element['settings']['css_id']) && !$is_logo_widget) {
                     error_log('CSS ID: ' . $element['settings']['css_id']);
                     if ($element['settings']['css_id'] === 'dsmk-logo') {
                         $is_logo_widget = true;
-                        $logo_identifier = 'CSS ID';
+                        $logo_identifier = 'CSS ID dsmk-logo';
+                        error_log('Found logo widget with CSS ID dsmk-logo');
                     }
                 }
                 
-                // Additional ways to identify logo widgets
-                if (!$is_logo_widget && isset($element['settings']['image'])) {
-                    // Check if the image has 'logo' in its title or alt text
-                    if (isset($element['settings']['image']['alt']) && 
-                        (stripos($element['settings']['image']['alt'], 'logo') !== false)) {
-                        $is_logo_widget = true;
-                        $logo_identifier = 'alt text contains "logo"';
-                    }
-                    
-                    // Check if the widget is in a header section
-                    if (isset($element['id']) && stripos($element['id'], 'header') !== false) {
-                        $is_logo_widget = true;
-                        $logo_identifier = 'in header section';
-                    }
-                }
-                
-                // Fallback: If this is the only image in the template, assume it's the logo
-                // This is a safety measure to ensure logo replacement works
+                // If this is NOT a logo widget, skip it entirely
                 if (!$is_logo_widget) {
-                    // For now, let's consider all image widgets as potential logos
-                    // This is a temporary fix until we can properly identify the logo widget
-                    $is_logo_widget = true;
-                    $logo_identifier = 'fallback (all images)';
-                    error_log('Using fallback logo detection - treating all images as logos');
+                    error_log('This is NOT a logo widget - preserving original image');
+                    // Skip to the next element - DO NOT modify this image
+                    continue;
                 }
                 
                 // Process the logo widget

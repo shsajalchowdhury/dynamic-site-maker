@@ -162,6 +162,29 @@ class DSMK_Admin_Settings {
             )
         );
         
+        // Success message customization
+        register_setting(
+            'dsmk_customization_settings',
+            'dsmk_success_message',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Success message', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default'           => 'Site created successfully!',
+            )
+        );
+        
+        register_setting(
+            'dsmk_customization_settings',
+            'dsmk_success_description',
+            array(
+                'type'              => 'string',
+                'description'       => __( 'Success description', 'dynamic-site-maker' ),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default'           => 'Your new affiliate site is ready to use!',
+            )
+        );
+        
         // Explodely API Settings
         add_settings_section(
             'dsmk_explodely_api_settings',
@@ -456,6 +479,14 @@ class DSMK_Admin_Settings {
             array( $this, 'display_section_info' ),
             'dsmk_customization_settings'
         );
+        
+        // Add success message customization section
+        add_settings_section(
+            'dsmk_customization_success_section',
+            __( 'Success Message', 'dynamic-site-maker' ),
+            array( $this, 'display_section_info' ),
+            'dsmk_customization_settings'
+        );
 
         add_settings_field(
             'dsmk_shortcode_page_title',
@@ -521,6 +552,23 @@ class DSMK_Admin_Settings {
             'dsmk_customization_steps_section'
         );
 
+        // Add success message customization fields
+        add_settings_field(
+            'dsmk_success_message',
+            __( 'Success Message Heading', 'dynamic-site-maker' ),
+            array( $this, 'success_message_callback' ),
+            'dsmk_customization_settings',
+            'dsmk_customization_success_section'
+        );
+        
+        add_settings_field(
+            'dsmk_success_description',
+            __( 'Success Message Description', 'dynamic-site-maker' ),
+            array( $this, 'success_description_callback' ),
+            'dsmk_customization_settings',
+            'dsmk_customization_success_section'
+        );
+        
         add_settings_field(
             'dsmk_shortcode_name_placeholder',
             __( 'Name Field Placeholder', 'dynamic-site-maker' ),
@@ -1011,6 +1059,26 @@ class DSMK_Admin_Settings {
         wp_reset_postdata();
         
         return $templates;
+    }
+
+    /**
+     * Success message callback
+     */
+    public function success_message_callback() {
+        ?>
+        <input type="text" id="dsmk_success_message" name="dsmk_success_message" value="<?php echo esc_attr( get_option( 'dsmk_success_message', 'Site created successfully!' ) ); ?>" class="regular-text">
+        <p class="description"><?php esc_html_e( 'The heading displayed on the success message after a landing page is created.', 'dynamic-site-maker' ); ?></p>
+        <?php
+    }
+
+    /**
+     * Success description callback
+     */
+    public function success_description_callback() {
+        ?>
+        <input type="text" id="dsmk_success_description" name="dsmk_success_description" value="<?php echo esc_attr( get_option( 'dsmk_success_description', 'Your new affiliate site is ready to use!' ) ); ?>" class="regular-text">
+        <p class="description"><?php esc_html_e( 'The description displayed on the success message after a landing page is created.', 'dynamic-site-maker' ); ?></p>
+        <?php
     }
 
     /**
