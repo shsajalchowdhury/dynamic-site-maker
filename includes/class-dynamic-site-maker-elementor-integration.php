@@ -172,6 +172,13 @@ class DSMK_Elementor_Integration {
             
             // Process image widgets for logo (specific handling for image widgets)
             if (isset($element['widgetType']) && $element['widgetType'] === 'image') {
+                // CRITICAL: Skip logo processing completely if no custom logo is uploaded
+                // This ensures the default template logo is preserved
+                if (empty($logo_id) || empty($logo_url)) {
+                    // Skip this image widget entirely when no custom logo exists
+                    continue;
+                }
+                
                 // Check if this is a placeholder image with class or ID containing 'logo'
                 $has_logo_class = false;
                 

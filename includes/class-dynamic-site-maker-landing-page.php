@@ -135,9 +135,6 @@ class DSMK_Landing_Page {
         
         // Log the logo status
         error_log('Page ' . $page_id . ' has custom logo: ' . ($has_custom_logo ? 'yes' : 'no'));
-        
-        // We'll let the template keep its default logo if no logo was uploaded
-        // This is handled in the process_template_data method
 
         // Set the page to use Elementor
         update_post_meta( $page_id, '_elementor_edit_mode', 'builder' );
@@ -151,42 +148,79 @@ class DSMK_Landing_Page {
         // Get the template ID from the plugin settings
         $template_id = get_option( 'dsmk_elementor_template_id', 0 );
         
-        if ( empty( $template_id ) ) {
+        if (empty($template_id)) {
             // If no template is set, use a default template
             $template_data = $this->get_default_template_data();
-            $template_data = $this->process_template_data($template_data, $page_id);
-            update_post_meta( $page_id, '_elementor_data', wp_slash( json_encode( $template_data ) ) );
+            
+            if ($has_custom_logo) {
+                // Process the template data with logo replacement
+                $template_data = $this->process_template_data($template_data, $page_id);
+            } else {
+                // Only update affiliate links and button text
+                $name = get_post_meta($page_id, '_dsmk_name', true);
+                $affiliate_link = get_post_meta($page_id, '_dsmk_affiliate_link', true);
+                $price = $this->extract_price_from_link($affiliate_link);
+                
+                // Only update text and links, never touch images
+                $template_data = $this->update_text_and_links($template_data, $name, $affiliate_link, $price);
+            }
+            
+            update_post_meta($page_id, '_elementor_data', wp_slash(json_encode($template_data)));
         } else {
             // Get the template content from Elementor's library
-            $template_data = $this->get_elementor_template_data( $template_id );
+            $template_data = $this->get_elementor_template_data($template_id);
             
-            if ( $template_data ) {
-                // Process the template data to handle logo and other dynamic elements
-                $template_data = $this->process_template_data($template_data, $page_id);
+            if ($template_data) {
+                if ($has_custom_logo) {
+                    // Process the template with logo replacement
+                    $template_data = $this->process_template_data($template_data, $page_id);
+                } else {
+                    // CRITICAL: When no logo is uploaded, only update text and links
+                    // This ensures the default logo is preserved exactly as is
+                    $name = get_post_meta($page_id, '_dsmk_name', true);
+                    $affiliate_link = get_post_meta($page_id, '_dsmk_affiliate_link', true);
+                    $price = $this->extract_price_from_link($affiliate_link);
+                    
+                    // Only update text and links, never touch images
+                    $template_data = $this->update_text_and_links($template_data, $name, $affiliate_link, $price);
+                }
                 
                 // Apply the processed template data to the page
-                update_post_meta( $page_id, '_elementor_data', wp_slash( json_encode( $template_data ) ) );
+                update_post_meta($page_id, '_elementor_data', wp_slash(json_encode($template_data)));
                 
                 // Copy all template meta data to ensure styles are preserved
-                $template_meta = get_post_meta( $template_id );
-                if ( ! empty( $template_meta ) ) {
-                    foreach ( $template_meta as $meta_key => $meta_value ) {
+                $template_meta = get_post_meta($template_id);
+                if (!empty($template_meta)) {
+                    foreach ($template_meta as $meta_key => $meta_value) {
                         // Skip keys we've already set or that shouldn't be copied
-                        if ( in_array( $meta_key, array( '_elementor_data', '_wp_page_template', 'post_content' ) ) ) {
+                        if (in_array($meta_key, array('_elementor_data', '_wp_page_template', 'post_content'))) {
                             continue;
                         }
                         
                         // Copy meta values that are related to Elementor
-                        if ( strpos( $meta_key, '_elementor_' ) === 0 || strpos( $meta_key, 'elementor_' ) === 0 ) {
-                            update_post_meta( $page_id, $meta_key, maybe_unserialize( $meta_value[0] ) );
+                        if (strpos($meta_key, '_elementor_') === 0 || strpos($meta_key, 'elementor_') === 0) {
+                            update_post_meta($page_id, $meta_key, maybe_unserialize($meta_value[0]));
                         }
                     }
                 }
             } else {
                 // Fallback to default if template retrieval fails
                 $template_data = $this->get_default_template_data();
-                $template_data = $this->process_template_data($template_data, $page_id);
-                update_post_meta( $page_id, '_elementor_data', wp_slash( json_encode( $template_data ) ) );
+                
+                if ($has_custom_logo) {
+                    // Process the template with logo replacement
+                    $template_data = $this->process_template_data($template_data, $page_id);
+                } else {
+                    // Only update affiliate links and button text
+                    $name = get_post_meta($page_id, '_dsmk_name', true);
+                    $affiliate_link = get_post_meta($page_id, '_dsmk_affiliate_link', true);
+                    $price = $this->extract_price_from_link($affiliate_link);
+                    
+                    // Only update text and links, never touch images
+                    $template_data = $this->update_text_and_links($template_data, $name, $affiliate_link, $price);
+                }
+                
+                update_post_meta($page_id, '_elementor_data', wp_slash(json_encode($template_data)));
             }
         }
 
@@ -249,7 +283,7 @@ class DSMK_Landing_Page {
         $affiliate_link = get_post_meta($page_id, '_dsmk_affiliate_link', true);
         $logo_id = get_post_meta($page_id, '_dsmk_logo_id', true);
         
-        // Determine if we have a custom logo
+        // Determine if we have a custom logo - MUST be a valid, non-zero ID
         $has_custom_logo = !empty($logo_id) && $logo_id > 0;
         
         // Log the logo information for debugging
@@ -262,21 +296,42 @@ class DSMK_Landing_Page {
         if ($has_custom_logo) {
             $logo_url = wp_get_attachment_url($logo_id);
             error_log('Logo URL: ' . ($logo_url ? $logo_url : 'Not found'));
+            
+            // Double-check that we have a valid logo URL
+            if (empty($logo_url)) {
+                $has_custom_logo = false;
+                error_log('Logo URL is empty, treating as no custom logo');
+            }
         }
         
         // Get the price from the affiliate link if available
         $price = $this->extract_price_from_link($affiliate_link);
         
         // Process the template data recursively
-        $template_data = $this->process_elements_recursively($template_data, [
-            'name' => $name,
-            'email' => $email,
-            'affiliate_link' => $affiliate_link,
-            'has_custom_logo' => $has_custom_logo,
-            'logo_id' => $logo_id,
-            'logo_url' => $logo_url,
-            'price' => $price
-        ]);
+        if ($has_custom_logo) {
+            // Only process for logo replacement if we have a custom logo
+            $template_data = $this->process_elements_recursively($template_data, [
+                'name' => $name,
+                'email' => $email,
+                'affiliate_link' => $affiliate_link,
+                'has_custom_logo' => true,
+                'logo_id' => $logo_id,
+                'logo_url' => $logo_url,
+                'price' => $price
+            ]);
+        } else {
+            // Skip logo processing entirely if no custom logo
+            $template_data = $this->process_elements_recursively($template_data, [
+                'name' => $name,
+                'email' => $email,
+                'affiliate_link' => $affiliate_link,
+                'has_custom_logo' => false,
+                'logo_id' => 0,
+                'logo_url' => '',
+                'price' => $price,
+                'skip_logo_processing' => true  // Add flag to skip logo processing
+            ]);
+        }
         
         return $template_data;
     }
@@ -308,6 +363,69 @@ class DSMK_Landing_Page {
     }
     
     /**
+     * Update only text and links, never touch images
+     * 
+     * @param array $template_data The template data to process
+     * @param string $name The user's name
+     * @param string $affiliate_link The affiliate link
+     * @param string $price The price from the affiliate link
+     * @return array The processed template data with only text and links updated
+     */
+    private function update_text_and_links($template_data, $name, $affiliate_link, $price) {
+        if (!is_array($template_data)) {
+            return $template_data;
+        }
+        
+        // Process each element recursively
+        foreach ($template_data as &$element) {
+            // Skip if not an array
+            if (!is_array($element)) {
+                continue;
+            }
+            
+            // CRITICAL: Skip ALL image widgets completely
+            // This ensures the default logo is preserved exactly as it is
+            if (isset($element['widgetType']) && $element['widgetType'] === 'image') {
+                continue;
+            }
+            
+            // Process button widgets to update text with price
+            if (isset($element['widgetType']) && $element['widgetType'] === 'button') {
+                if (isset($element['settings']['text']) && strpos($element['settings']['text'], 'Reserve Your Seat') !== false) {
+                    // Update button text with the correct price
+                    $element['settings']['text'] = 'Reserve Your Seat For ' . $price;
+                    error_log('Updated button text with price: ' . $price);
+                }
+                
+                // Update button links that contain affiliate link placeholders
+                if (isset($element['settings']['link']['url']) && strpos($element['settings']['link']['url'], '{{affiliate_link}}') !== false) {
+                    $element['settings']['link']['url'] = str_replace('{{affiliate_link}}', $affiliate_link, $element['settings']['link']['url']);
+                    error_log('Updated button link with affiliate link: ' . $affiliate_link);
+                }
+            }
+            
+            // Replace name placeholders in text
+            if (isset($element['settings']['title']) && strpos($element['settings']['title'], '{{name}}') !== false) {
+                $element['settings']['title'] = str_replace('{{name}}', $name, $element['settings']['title']);
+                error_log('Updated title with name: ' . $name);
+            }
+            
+            // Replace affiliate link placeholders in any URLs
+            if (isset($element['settings']['link']['url']) && strpos($element['settings']['link']['url'], '{{affiliate_link}}') !== false) {
+                $element['settings']['link']['url'] = str_replace('{{affiliate_link}}', $affiliate_link, $element['settings']['link']['url']);
+                error_log('Updated link with affiliate link: ' . $affiliate_link);
+            }
+            
+            // Process child elements recursively
+            if (isset($element['elements']) && is_array($element['elements'])) {
+                $element['elements'] = $this->update_text_and_links($element['elements'], $name, $affiliate_link, $price);
+            }
+        }
+        
+        return $template_data;
+    }
+    
+    /**
      * Process elements recursively to replace placeholders and handle dynamic content
      * 
      * @param array $elements The elements to process
@@ -331,6 +449,14 @@ class DSMK_Landing_Page {
             
             // Handle image widgets - for logo replacement or preservation
             if (isset($element['widgetType']) && $element['widgetType'] === 'image') {
+                // CRITICAL: If no custom logo was uploaded, skip ALL image processing completely
+                // This ensures the default template logo is preserved exactly as it is
+                if (!$data['has_custom_logo']) {
+                    // Do not process ANY images when no custom logo is uploaded
+                    continue;
+                }
+                
+                // From this point on, we know we have a custom logo
                 // ONLY identify logo widgets by the CSS class 'dsmk-logo'
                 $is_logo_widget = false;
                 $logo_identifier = '';
@@ -372,32 +498,22 @@ class DSMK_Landing_Page {
                     continue;
                 }
                 
-                // Process the logo widget
-                if ($is_logo_widget) {
-                    error_log('Identified logo widget via ' . $logo_identifier);
-                    
-                    if ($data['has_custom_logo'] && !empty($data['logo_id']) && !empty($data['logo_url'])) {
-                        // Replace with custom logo - use the pre-fetched URL for reliability
-                        error_log('Replacing logo with custom logo ID: ' . $data['logo_id'] . ', URL: ' . $data['logo_url']);
-                        
-                        // Update all image properties to ensure the logo is properly replaced
-                        $element['settings']['image']['id'] = $data['logo_id'];
-                        $element['settings']['image']['url'] = $data['logo_url'];
-                        
-                        // Also update these properties if they exist
-                        if (isset($element['settings']['image']['source'])) {
-                            $element['settings']['image']['source'] = 'library';
-                        }
-                        
-                        // Clear any default image settings that might override our custom logo
-                        if (isset($element['settings']['image']['default'])) {
-                            unset($element['settings']['image']['default']);
-                        }
-                    } else {
-                        error_log('No custom logo provided, keeping default logo');
-                    }
-                } else {
-                    error_log('Not identified as a logo widget, preserving original image');
+                // Process the logo widget - we've already confirmed we have a custom logo
+                error_log('Identified logo widget via ' . $logo_identifier);
+                error_log('Replacing logo with custom logo ID: ' . $data['logo_id'] . ', URL: ' . $data['logo_url']);
+                
+                // Update all image properties to ensure the logo is properly replaced
+                $element['settings']['image']['id'] = $data['logo_id'];
+                $element['settings']['image']['url'] = $data['logo_url'];
+                
+                // Also update these properties if they exist
+                if (isset($element['settings']['image']['source'])) {
+                    $element['settings']['image']['source'] = 'library';
+                }
+                
+                // Clear any default image settings that might override our custom logo
+                if (isset($element['settings']['image']['default'])) {
+                    unset($element['settings']['image']['default']);
                 }
             }
             
